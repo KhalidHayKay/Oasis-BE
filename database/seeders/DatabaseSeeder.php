@@ -14,13 +14,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Waitlist::factory(20)->create();
+        // Waitlist::factory(10)->create();
 
         // User::factory(10)->create();
 
         User::factory()->create([
             'name'  => 'John Doe',
             'email' => 'john@example.com',
+        ]);
+
+        $this->call([
+            CategorySeeder::class,
+            ProductImageSeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }
