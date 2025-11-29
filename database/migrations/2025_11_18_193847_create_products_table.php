@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description');
-            $table->decimal('price', 8, 2);
+            $table->json('price');
+            $table->integer('popularity_score');
             $table->integer('stock');
             $table->unsignedBigInteger('featured_image_id')->nullable();
             $table->timestamps();

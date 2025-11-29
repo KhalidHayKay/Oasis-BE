@@ -9,8 +9,8 @@ class ProductService
     public function top()
     {
         $products = $products = Product::with(['featuredImage', 'categories'])
-            ->latest() // Later: ->where('is_top_product', true)
-            ->limit(8)
+            ->orderBy('popularity_score', 'desc')
+            ->limit(48)
             ->get();
 
         return $products;

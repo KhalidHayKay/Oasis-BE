@@ -24,7 +24,7 @@ class ProductSeeder extends Seeder
 
         shuffle($imageGroups);
 
-        $productsToCreate = 50;
+        $productsToCreate = 150;
 
         Product::factory($productsToCreate)->create()->each(function ($product, $index) use ($categories, $imageGroups) {
             $product->categories()->attach(
@@ -48,7 +48,5 @@ class ProductSeeder extends Seeder
 
             $product->update(['featured_image_id' => $firstImageId]);
         });
-
-        $this->command->info("Created {$productsToCreate} products with image groups.");
     }
 }
