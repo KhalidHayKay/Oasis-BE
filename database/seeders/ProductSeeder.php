@@ -13,24 +13,13 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = Category::all();
-
-        if ($categories->isEmpty()) {
-            $this->command->error('Please run CategorySeeder first!');
-            return;
-        }
-
         $imageGroups = ProductImageSeeder::getImageGroups();
 
         shuffle($imageGroups);
 
         $productsToCreate = 150;
 
-        Product::factory($productsToCreate)->create()->each(function ($product, $index) use ($categories, $imageGroups) {
-            $product->categories()->attach(
-                $categories->random(rand(1, 3))->pluck('id')
-            );
-
+        Product::factory($productsToCreate)->create()->each(function ($product, $index) use ($imageGroups) {
             $imageGroup = $imageGroups[$index % count($imageGroups)];
 
             $firstImageId = null;

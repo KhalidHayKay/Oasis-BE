@@ -17,8 +17,13 @@ return new class extends Migration
             $table->text('description');
             $table->json('price');
             $table->integer('popularity_score');
+            $table->integer('rating')->default(0);
+            $table->json('colors')->nullable();
             $table->integer('stock');
+
+            $table->foreignId('category_id')->constrained('categories');
             $table->unsignedBigInteger('featured_image_id')->nullable();
+
             $table->timestamps();
         });
     }

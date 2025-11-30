@@ -17,15 +17,30 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $hexColors = [
+            '#D8D8D8', // Soft Beige
+            '#A8D5BA', // Sage Green
+            '#8FA3C7', // Muted Blue
+            '#A49B8A', // Warm Taupe
+            '#2C3E50', // Deep Charcoal
+            '#D6A6A1', // Dusty Rose
+            '#C0C0C0', // Taupe Gray
+        ];
+
         return [
             'name'             => $this->faker->words(3, true),
             'description'      => $this->faker->paragraph(2),
             'price'            => json_encode([
                 'amount'   => $this->faker->randomFloat(0, 10, 500),
                 'currency' => 'USD',
+                'discount' => $this->faker->numberBetween(0, 50),
             ]),
             'stock'            => $this->faker->numberBetween(5, 20),
             'popularity_score' => $this->faker->numberBetween(1, 100),
+            'rating'           => $this->faker->numberBetween(1, 5),
+            'colors'           => json_encode($this->faker->randomElements($hexColors, $this->faker->numberBetween(1, 3))),
+
+            'category_id'      => $this->faker->randomElement(Category::pluck('id')->toArray()),
         ];
     }
 }

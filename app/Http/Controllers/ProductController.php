@@ -6,6 +6,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Services\ProductService;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductDetailResource;
 
 class ProductController extends Controller
 {
@@ -21,7 +22,7 @@ class ProductController extends Controller
         [$product, $related] = $this->service->product($product);
 
         return response()->json([
-            'product'         => ProductResource::make($product),
+            'product'         => ProductDetailResource::make($product),
             'relatedProducts' => productResource::collection($related),
         ]);
     }

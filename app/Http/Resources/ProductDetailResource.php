@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProductResource extends JsonResource
+class ProductDetailResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,14 +17,20 @@ class ProductResource extends JsonResource
         return [
             'id'            => $this->id,
             'name'          => $this->name,
+            'description'   => $this->description,
             'price'         => json_decode($this->price),
             'popularity'    => $this->popularity_score,
             'colors'        => json_decode($this->colors),
+            'rating'        => $this->rating,
             'featuredImage' => $this->whenLoaded('featuredImage', fn () => [
                 'src' => $this->featuredImage->image_path,
                 'alt' => $this->featuredImage->alt_text,
             ]),
-            'categories'    => $this->whenLoaded('categories', fn () => $this->categories->pluck('name')),
+            'images'        => $this->whenLoaded('images', fn () => $this->images->map(fn ($image) => [
+                'src' => $image->image_path,
+                'alt' => $image->alt_text,
+            ])),
+            'category'      => $this->whenLoaded('category', fn () => $this->category->name),
             'createdAt'     => $this->created_at,
         ];
     }

@@ -8,7 +8,7 @@ class ProductService
 {
     public function top()
     {
-        $products = $products = Product::with(['featuredImage', 'categories'])
+        $products = $products = Product::with(['featuredImage', 'category'])
             ->orderBy('popularity_score', 'desc')
             ->limit(48)
             ->get();
@@ -18,14 +18,12 @@ class ProductService
 
     public function product(Product $product)
     {
-        $product = $product->load(['images', 'featuredImage', 'categories']);
+        $product = $product->load(['images', 'featuredImage', 'category']);
 
-        $related = Product::whereHas('categories', function ($q) use ($product) {
-            $q->whereIn('categories.id', $product->categories->pluck('id'));
-        })
+        $related = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->with('featuredImage')
-            ->limit(4)
+            ->limit(10)
             ->get();
 
         return [$product, $related];

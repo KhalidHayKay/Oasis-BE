@@ -26,9 +26,9 @@ class Product extends Model
         return $this->hasOne(ProductImage::class)->latestOfMany();
     }
 
-    public function categories()
+    public function category()
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsTo(Category::class);
     }
 
     public function cart()
