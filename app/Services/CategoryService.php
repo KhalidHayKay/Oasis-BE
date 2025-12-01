@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use App\Models\Category;
 
 class CategoryService
@@ -17,7 +18,9 @@ class CategoryService
     {
         $category = Category::where('slug', $slug)->withCount('products')->firstOrFail();
 
-        $query = $category->products()->with(['featuredImage', 'categories']);
+        $tags = $category->tags;
+
+        $query = $category->products()->with(['featuredImage', 'category', 'tags']);
 
         if ($sortKey) {
             match ($sortKey) {
@@ -29,8 +32,14 @@ class CategoryService
         }
 
         // $products = $query->get();
-        $products = $query->paginate(12);
+        $products = $query->paginate(40);
 
-        return [$category, $products];
+        $related = Product::where('category_id', '!=', $category->id)
+            ->with(['featuredImage', 'category'])
+            ->inRandomOrder()
+            ->limit(20)
+            ->get();
+
+        return [$category, $tags, $products, $related];
     }
 }

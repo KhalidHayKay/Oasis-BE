@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Tag;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Database\Seeder;
@@ -17,7 +18,7 @@ class ProductSeeder extends Seeder
 
         shuffle($imageGroups);
 
-        $productsToCreate = 150;
+        $productsToCreate = 300;
 
         Product::factory($productsToCreate)->create()->each(function ($product, $index) use ($imageGroups) {
             $imageGroup = $imageGroups[$index % count($imageGroups)];
@@ -36,6 +37,13 @@ class ProductSeeder extends Seeder
             }
 
             $product->update(['featured_image_id' => $firstImageId]);
+
+            $product->tags()->attach(
+                Tag::where('category_id', $product->category_id)
+                    ->inRandomOrder()
+                    ->limit(rand(1, 3))
+                    ->pluck('id')
+            );
         });
     }
 }

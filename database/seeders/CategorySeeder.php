@@ -15,11 +15,13 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Furniture',
+            'Bedroom',
+            'Sitting Room',
+            'Accessories',
+            'Kitchen',
             'Lighting',
             'Decor',
             'Storage',
-            'Bedroom',
             'Office',
             'Outdoor',
         ];

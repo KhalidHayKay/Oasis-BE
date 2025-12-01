@@ -24,7 +24,8 @@ class ProductResource extends JsonResource
                 'src' => $this->featuredImage->image_path,
                 'alt' => $this->featuredImage->alt_text,
             ]),
-            'categories'    => $this->whenLoaded('categories', fn () => $this->categories->pluck('name')),
+            'category'      => $this->whenLoaded('category', fn () => $this->category->name),
+            'tags'          => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')),
             'createdAt'     => $this->created_at,
         ];
     }

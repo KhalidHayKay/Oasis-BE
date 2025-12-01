@@ -31,6 +31,7 @@ class ProductDetailResource extends JsonResource
                 'alt' => $image->alt_text,
             ])),
             'category'      => $this->whenLoaded('category', fn () => $this->category->name),
+            'tags'          => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')),
             'createdAt'     => $this->created_at,
         ];
     }
