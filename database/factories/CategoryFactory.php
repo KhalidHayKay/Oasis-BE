@@ -17,9 +17,10 @@ class CategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'        => $this->faker->word(),
-            'description' => $this->faker->sentence(10),
-            'slug'        => $this->faker->unique()->slug(),
+            'name'             => $this->faker->word(),
+            'description'      => $this->faker->sentence(10),
+            'slug'             => $this->faker->unique()->slug(),
+            'popularity_score' => $this->faker->numberBetween(1, 100),
         ];
     }
 }

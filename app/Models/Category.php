@@ -13,6 +13,8 @@ class Category extends Model
         'name',
         'description',
         'slug',
+        'image',
+        'popularity_score',
     ];
 
     public function tags()

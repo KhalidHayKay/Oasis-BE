@@ -10,20 +10,19 @@ use App\Http\Resources\CategoryResource;
 
 class CategoryController extends Controller
 {
-    public function __construct(private CategoryService $service) {}
+    public function __construct(private readonly CategoryService $service) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $categories = $this->service->categories();
+        $categories = $this->service->categories($request->query());
 
-        return response()->json([
-            'categories' => CategoryResource::collection($categories),
-        ]);
+        return CategoryResource::collection($categories);
     }
 
     public function show(Request $request, $slug)
     {
-        [$category, $tags, $products, $related] = $this->service->productsByCategorySlug($slug, $request->query('sort'));
+        [$category, $tags, $products, $related] =
+            $this->service->productsByCategorySlug($slug, $request->query('sort'));
 
         return response()->json([
             'category'        => CategoryResource::make($category),

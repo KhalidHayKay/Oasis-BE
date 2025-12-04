@@ -24,7 +24,6 @@ class TagSeeder extends Seeder
             'Decor'        => ['Wall Art', 'Mirror', 'Rug', 'Indoor Plant', 'Decorative Tray', 'Sculpture', 'Clock', 'Centerpiece'],
             'Storage'      => ['Cabinet', 'Drawer Chest', 'Shoe Rack', 'Floating Shelf', 'Storage Basket', 'TV Console', 'Sideboard', 'Bookshelf', 'Closet Box'],
             'Office'       => ['Office Chair', 'Work Desk', 'Monitor Stand', 'Desk Lamp', 'Desk Organizer', 'Filing Cabinet', 'Laptop Stand', 'Drawer Unit'],
-            'Outdoor'      => ['Patio Chair', 'Garden Table', 'Umbrella', 'Outdoor Sofa', 'Planter Pot', 'Outdoor Rug', 'Lantern Light', 'Garden Bench', 'Hammock'],
         ];
 
         foreach ($categoryTags as $categoryName => $tags) {

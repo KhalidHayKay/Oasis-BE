@@ -15,15 +15,12 @@ class TagResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'       => $this->id,
-            'name'     => $this->name,
-            'slug'     => $this->slug,
-            'category' => $this->whenLoaded('category', function () {
-                return CategoryResource::make($this->category);
-            }),
-            'products' => $this->whenLoaded('products', function () {
-                return ProductResource::collection($this->products);
-            }),
+            'id'           => $this->id,
+            'name'         => $this->name,
+            'slug'         => $this->slug,
+            'category'     => $this->whenLoaded('category', fn () => CategoryResource::make($this->category)),
+            'products'     => $this->whenLoaded('products', fn () => ProductResource::collection($this->products)),
+            'productCount' => $this->when(isset($this->products_count), $this->products_count),
         ];
     }
 }

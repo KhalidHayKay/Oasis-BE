@@ -14,6 +14,7 @@ class Product extends Model
         'description',
         'price',
         'stock',
+        'popularity_score',
     ];
 
     public function images()

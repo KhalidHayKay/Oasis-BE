@@ -12,6 +12,13 @@ class ProductController extends Controller
 {
     public function __construct(private readonly ProductService $service) {}
 
+    public function index(Request $request)
+    {
+        $products = $this->service->all($request->query());
+
+        return ProductResource::collection($products);
+    }
+
     public function top()
     {
         return ProductResource::collection($this->service->top());

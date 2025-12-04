@@ -7,11 +7,19 @@ use App\Models\Category;
 
 class CategoryService
 {
-    public function categories()
+    public function categories(array $filters)
     {
-        $categories = Category::withCount('products')->get();
+        $query = Category::withCount('products');
 
-        return $categories;
+        if (! empty($filters['sort_by']) && $filters['sort_by'] === 'popularity') {
+            $query->orderBy('popularity_score', 'desc');
+        }
+
+        if (! empty($filters['max'])) {
+            $query->take($filters['max']);
+        }
+
+        return $query->get();
     }
 
     public function productsByCategorySlug(string $slug, ?string $sortKey = null)
@@ -31,7 +39,6 @@ class CategoryService
             };
         }
 
-        // $products = $query->get();
         $products = $query->paginate(40);
 
         $related = Product::where('category_id', '!=', $category->id)

@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->text('description')->nullable();
             $table->string('slug')->unique();
+            $table->string('image')->nullable();
+            $table->integer('popularity_score');
             $table->timestamps();
         });
     }
