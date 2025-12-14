@@ -30,9 +30,8 @@ RUN docker-php-ext-configure intl \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Create user
-RUN groupadd --force -g $GROUP_ID $USER
-RUN useradd -ms /bin/bash --no-user-group -g $GROUP_ID -u 1337 $USER
-RUN usermod -u $USER_ID $USER
+RUN addgroup -g $GROUP_ID $USER
+RUN adduser -D -u $USER_ID -G $USER -s /bin/bash $USER
 
 WORKDIR /var/www
 USER $USER

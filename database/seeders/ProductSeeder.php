@@ -26,8 +26,10 @@ class ProductSeeder extends Seeder
             $firstImageId = null;
 
             foreach ($imageGroup as $i => $url) {
+                $width = $i === 0 ? 1200 : 800;
+
                 $image = $product->images()->create([
-                    'image_path' => $url,
+                    'image_path' => $this->applyWidth($url, $width),
                     'alt_text'   => $product->name . ' - View ' . ($i + 1),
                 ]);
 
@@ -46,4 +48,10 @@ class ProductSeeder extends Seeder
             );
         });
     }
+
+    private function applyWidth($url, $width = 800): string
+    {
+        return str_replace('/upload/f_auto/q_auto/', "/upload/f_auto/q_auto/w_{$width}/", $url);
+    }
+
 }
