@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Observers\UserObserver;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Notifications\Notifiable;
@@ -27,8 +28,6 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
         'email',
         'password',
         'avatar',
-        'auth_provider',
-        'firebase_uid',
         'email_verified_at',
     ];
 
@@ -54,6 +53,12 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
             'password'          => 'string',
         ];
     }
+
+    protected static function booted(): void
+    {
+        static::observe(UserObserver::class);
+    }
+
     public function socialAccounts()
     {
         return $this->hasMany(SocialAccount::class);
@@ -66,5 +71,10 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
         $this->tokens()->where('name', $requestAgent)->delete();
 
         return $this->createToken($requestAgent);
+    }
+
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
     }
 }

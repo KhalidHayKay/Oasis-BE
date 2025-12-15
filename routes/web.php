@@ -3,6 +3,8 @@
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__ . '/health.php';
+
 Route::prefix('docs')->group(function () {
     Scramble::registerUiRoute('api');
     Scramble::registerJsonSpecificationRoute('api.json');

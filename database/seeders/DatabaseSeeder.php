@@ -14,16 +14,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Waitlist::factory(10)->create();
-
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name'  => 'John Doe',
-            'email' => 'john@example.com',
-        ]);
-
         $this->call([
+            UserSeeder::class,
             CategorySeeder::class,
             TagSeeder::class,
             ProductImageSeeder::class,

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Services\Support\ServiceResponse;
 use Illuminate\Support\Str;
 use App\Mail\AccountCreated;
 use App\Models\SocialAccount;
@@ -12,10 +11,12 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Services\Support\ServiceResponse;
+use Laravel\Socialite\Contracts\User as SocialUser;
 
 class AuthService
 {
-    public function __construct(readonly protected FirebaseAuthService $firebase) {}
+    // public function __construct(readonly protected FirebaseAuthService $firebase) {}
 
     public function login(array $credentials)
     {
@@ -36,15 +37,11 @@ class AuthService
         return $this->respondWithToken($user, 'Login successful');
     }
 
-    public function sLogin(string $authToken)
+    public function socialLogin(SocialUser $socialUser, string $provider)
     {
-        $userData = $this->firebase->getUserData($authToken);
-
-        if (! $userData) {
-            return new ServiceResponse(['message' => 'Invalid Firebase token'], 401);
-        }
-
-        $account = SocialAccount::where($userData['social'])->first();
+        $account = SocialAccount::where('provider_name', $provider)
+            ->where('provider_id', $socialUser->getId())
+            ->first();
 
         if ($account) {
             return $this->respondWithToken($account->user, 'Login successful');
@@ -52,30 +49,33 @@ class AuthService
 
         // Find or create user (since social account does not exist)
         $user = User::firstOrCreate(
-            ['email' => $userData['email']],
+            ['email' => $socialUser->getEmail()],
             [
-                'name'              => $userData['name'] ?? $userData['email'],
+                'name'              => $socialUser->getName() ?? $socialUser->getEmail(),
                 'password'          => bcrypt(Str::random(24)),
-                'avatar'            => $userData['avatar'] ?? null,
-                'firebase_uid'      => $userData['fb_uid'],
+                'avatar'            => $socialUser->getAvatar() ?? null,
                 'email_verified_at' => now(),
             ]
         );
 
         // Linking of social account to newly created user
-        $user->socialAccounts()->create($userData['social']);
+        $user->socialAccounts()->create([
+            'provider_name' => $provider,
+            'provider_id'   => $socialUser->getId(),
+        ]);
 
         if ($user->wasRecentlyCreated) {
             Mail::to($user->email)->send(new AccountCreated($user->name));
             return $this->respondWithToken($user, 'Registration successful');
         }
 
-        if (! $user->email_verified_at && $userData['email_verified']) {
+        // Verifying email if email was not verified prior to usage of social login
+        if (! $user->email_verified_at) {
             $user->email_verified_at = now();
         }
 
-        if (! $user->avatar && $userData['avatar']) {
-            $user->avatar = $userData['avatar'];
+        if (! $user->avatar && $avatar = $socialUser->getAvatar()) {
+            $user->avatar = $avatar;
         }
 
         $user->save();

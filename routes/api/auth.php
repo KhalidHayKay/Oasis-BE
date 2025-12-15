@@ -3,9 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 
-Route::prefix('/auth')->group(function () {
+Route::prefix('auth')->group(function () {
+    Route::get('/provider/{provider}', [SocialAuthController::class, 'redirect']);
+    Route::get('/provider/{provider}/callback', [SocialAuthController::class, 'callback']);
+
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/social-login', [AuthController::class, 'socialLogin']);
