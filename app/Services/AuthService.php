@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Services\Support\ServiceResponse;
+use App\Services\Support\AuthResponse;
+use App\Exceptions\EmailNotVerifiedException;
+use App\Exceptions\InvalidLoginCredentialException;
 use Laravel\Socialite\Contracts\User as SocialUser;
 
 class AuthService
@@ -23,18 +25,17 @@ class AuthService
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            return new ServiceResponse(['message' => 'Invalid credentials'], 401);
+            throw new InvalidLoginCredentialException();
         }
 
         if (! $user->email_verified_at) {
             $this->sendEmailVerificationCode($user);
-            return new ServiceResponse(
-                ['message' => 'Email not verified. A new verification code has been sent to your email.'],
-                403
+            throw new EmailNotVerifiedException(
+                'Email not verified. A new verification code has been sent to your email.'
             );
         }
 
-        return $this->respondWithToken($user, 'Login successful');
+        return $this->respondWithToken($user);
     }
 
     public function socialLogin(SocialUser $socialUser, string $provider)
@@ -91,19 +92,12 @@ class AuthService
 
         $this->sendEmailVerificationCode($user);
 
-        return $this->respondWithToken($user, 'Registration successful. Check your email for verification code');
+        return $this->respondWithToken($user);
     }
 
-    public function logout(User $user, string $all)
+    public function logout(User $user)
     {
-        if ($all === 'all') {
-            $user->tokens()->delete();
-            return new ServiceResponse(['message' => 'Logged out from all devices']);
-        }
-
-        $user->currentAccessToken->delete();
-
-        return new ServiceResponse(['message' => 'Logged out successfully']);
+        $user->currentAccessToken()->delete();
     }
 
     private function sendEmailVerificationCode(User $user)
@@ -135,16 +129,11 @@ class AuthService
         return $code;
     }
 
-    protected function respondWithToken(User $user, string $message)
+    protected function respondWithToken(User $user)
     {
-        return new ServiceResponse([
-            'message' => $message,
-            'user'    => new UserResource($user),
-            'token'   => [
-                'access' => $user->createToken('auth_token')->plainTextToken,
-                'type'   => 'Bearer',
-            ],
-
-        ], 201);
+        return new AuthResponse(
+            $user,
+            $user->createToken('auth_token')->plainTextToken
+        );
     }
 }

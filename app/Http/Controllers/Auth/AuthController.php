@@ -6,11 +6,18 @@ use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterUserRequest;
 
 class AuthController extends Controller
 {
     public function __construct(readonly protected AuthService $service) {}
+
+    public function me(Request $request)
+    {
+        return UserResource::make($request->user());
+    }
 
     public function login(Request $request): JsonResponse
     {
@@ -19,30 +26,45 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $response = $this->service->login($data);
+        $res = $this->service->login($data);
 
-        return response()->json($response->data, $response->code);
+        $cookie = $this->makeCookie($res->token);
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user'    => UserResource::make($res->user),
+        ])->cookie($cookie);
     }
 
     public function register(RegisterUserRequest $request): JsonResponse
     {
         $data = $request->validated();
 
-        $response = $this->service->register($data);
+        $res = $this->service->register($data);
 
-        return response()->json($response->data, $response->code);
+        $cookie = $this->makeCookie($res->token);
+
+        return response()->json([
+            'message' => 'Registration successful, A verification code will be sent to your email',
+            'user'    => UserResource::make($res->user),
+        ], 201)->cookie($cookie);
     }
 
-    public function logout(Request $request, string|null $all = null): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        if (! $user) {
-            return response()->json(['message' => 'User not authenticated'], 401);
-        }
+        $this->service->logout($user);
 
-        $response = $this->service->logout($user, $all);
+        $cookie = cookie()->forget('auth_token');
 
-        return response()->json($response->data, $response->code);
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ])->cookie($cookie);
+    }
+
+    private function makeCookie(string $token)
+    {
+        return cookie('auth_token', $token, 60);
     }
 }

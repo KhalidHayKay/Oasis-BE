@@ -64,15 +64,6 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
         return $this->hasMany(SocialAccount::class);
     }
 
-    public function makeToken()
-    {
-        $requestAgent = Request::header('User-Agent') ?? 'auth-token';
-
-        $this->tokens()->where('name', $requestAgent)->delete();
-
-        return $this->createToken($requestAgent);
-    }
-
     public function cart()
     {
         return $this->hasOne(Cart::class);

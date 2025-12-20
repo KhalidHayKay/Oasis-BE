@@ -40,11 +40,16 @@ class EmailVerificationController extends Controller
 
         DB::table('email_verification_tokens')->where('user_id', $user->id)->delete();
 
+        $cookie = cookie(
+            'auth_token',
+            $user->makeToken()->plainTextToken,
+            60
+        );
+
         return response()->json([
             'message' => 'Email verified successfully',
             'user'    => new UserResource($user),
-            'token'   => $user->makeToken()->plainTextToken,
-        ]);
+        ])->cookie($cookie);
     }
 
     public function code(Request $request)
