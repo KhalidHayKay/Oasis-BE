@@ -42,7 +42,7 @@ class EmailVerificationController extends Controller
 
         $cookie = cookie(
             'auth_token',
-            $user->makeToken()->plainTextToken,
+            $user->createToken('auth_token')->plainTextToken,
             60
         );
 
