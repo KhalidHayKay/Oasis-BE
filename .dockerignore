@@ -9,5 +9,6 @@
 docker
 !docker/nginx/production.conf
 !docker/start.sh
-storage
+/storage/*.key
+/storage/pail
 vendor
