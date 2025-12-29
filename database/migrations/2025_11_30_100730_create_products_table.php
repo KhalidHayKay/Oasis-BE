@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('popularity_score');
             $table->integer('rating')->default(0);
             $table->json('colors')->nullable();
+            $table->boolean('is_available')->default(true);
             $table->integer('stock');
 
             $table->foreignId('category_id')->constrained('categories');
