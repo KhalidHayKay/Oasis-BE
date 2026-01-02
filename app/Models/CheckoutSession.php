@@ -15,4 +15,9 @@ class CheckoutSession extends Model
         'status',
         'expires_at',
     ];
+
+    protected $casts = [
+        'shipping_address' => 'array',
+        'expires_at'       => 'datetime',
+    ];
 }

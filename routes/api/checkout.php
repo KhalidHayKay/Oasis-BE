@@ -2,11 +2,19 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::prefix('checkout')->group(function () {
         Route::get('/validate', [CheckoutController::class, 'validate']);
         Route::post('/customer', [CheckoutController::class, 'attachCustomer']);
+    });
+
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::post('/', [OrderController::class, 'store']);
+        Route::get('/{order}', [OrderController::class, 'show']);
+        // Route::post('/{order}/payments', [OrderPaymentController::class, 'store']);
     });
 });
 
@@ -24,16 +32,6 @@ Route::prefix('checkout')->group(function () {
     Route::post('/{checkout}/discounts', 'CheckoutDiscountController@store');
     Route::delete('/{checkout}/discounts/{code}', 'CheckoutDiscountController@destroy');
 });
-*/
-
-/*
-Route::prefix('orders')->group(function () {
-    Route::post('/', 'OrderController@store');
-    Route::get('/{order}', 'OrderController@show');
-
-    Route::post('/{order}/payments', 'OrderPaymentController@store');
-});
-*/
 
 /*
 Route::prefix('webhooks')->group(function () {

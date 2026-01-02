@@ -9,4 +9,33 @@ class Order extends Model
 {
     /** @use HasFactory<\Database\Factories\OrderFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'checkout_session_id',
+        'customer_email',
+        'order_number',
+        'user_id',
+        'shipping_address',
+        'billing_address',
+        'status',
+        'subtotal',
+        'tax',
+        'shipping_fee',
+        'total',
+    ];
+
+    protected $casts = [
+        'shipping_address' => 'array',
+        'billing_address'  => 'array',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

@@ -18,6 +18,11 @@ class Product extends Model
         'popularity_score',
     ];
 
+    protected $casts = [
+        'is_available' => 'boolean',
+        'price'        => 'array',
+    ];
+
     public function images()
     {
         return $this->hasMany(ProductImage::class);

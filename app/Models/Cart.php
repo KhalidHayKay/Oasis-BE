@@ -23,4 +23,9 @@ class Cart extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function checkoutSession()
+    {
+        return $this->hasOne(CheckoutSession::class);
+    }
 }

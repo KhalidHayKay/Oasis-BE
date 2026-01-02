@@ -55,13 +55,17 @@ class CheckoutService
             ];
         }
 
-        // Create checkout session
-        $checkoutSession = CheckoutSession::create([
-            'public_token' => Str::uuid(),
-            'cart_id'      => $cart->id,
-            'user_id'      => $user->id,
-            'expires_at'   => now()->addMinutes(15),
-        ]);
+        $checkoutSession = CheckoutSession::where('cart_id', $cart->id)
+            ->where('status', 'active')->first();
+
+        if (! $checkoutSession) {
+            $checkoutSession = CheckoutSession::create([
+                'public_token' => Str::uuid(),
+                'cart_id'      => $cart->id,
+                'user_id'      => $user->id,
+                'expires_at'   => now()->addMinutes(15),
+            ]);
+        }
 
         return [
             'ok'                  => true,
@@ -72,7 +76,8 @@ class CheckoutService
 
     public function attachCustomerAndAddress(User $user, array $data): CheckoutSession
     {
-        $checkoutSession = CheckoutSession::where('public_token', $data['checkout_token'])->firstOrFail();
+        $checkoutSession = CheckoutSession::where('public_token', $data['checkout_token'])
+            ->firstOrFail();
 
         if ($checkoutSession->status !== 'active') {
             throw new \RuntimeException('Checkout session is not active.');

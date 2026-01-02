@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CheckoutRequest;
-use App\Models\Cart;
 use Illuminate\Http\Request;
 use App\Services\CheckoutService;
 

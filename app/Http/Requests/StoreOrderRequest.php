@@ -11,7 +11,7 @@ class StoreOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,17 +22,26 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_email'   => 'required|email',
+            'checkout_token'      => 'required|string|exists:checkout_sessions,public_token',
 
-            // Shipping address
-            'shipping_name'    => 'required|string|max:255',
-            'shipping_phone'   => 'required|string|max:20',
-            'shipping_address' => 'required|string',
-            'shipping_city'    => 'required|string',
-            'shipping_state'   => 'required|string',
-            'shipping_lga'     => 'required|string',
+            'customer_email'      => 'nullable|email|required_if:user,null',
 
-            'is_default'       => 'boolean',
+            'billing_name'        => 'required_if:is_same_as_shipping,false|string|max:255',
+            'billing_phone'       => 'required_if:is_same_as_shipping,false|string|max:20',
+            'billing_address'     => 'required_if:is_same_as_shipping,false|string',
+            'billing_city'        => 'required_if:is_same_as_shipping,false|string',
+            'billing_state'       => 'required_if:is_same_as_shipping,false|string',
+            'billing_lga'         => 'required_if:is_same_as_shipping,false|string',
+
+            'is_same_as_shipping' => 'required|boolean',
         ];
     }
+
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'is_same_as_shipping' => filter_var($this->is_same_as_shipping, FILTER_VALIDATE_BOOLEAN),
+        ]);
+    }
+
 }

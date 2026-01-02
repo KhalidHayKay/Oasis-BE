@@ -14,9 +14,13 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('checkout_session_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // buyer
             $table->string('order_number')->unique();
             $table->string('customer_email');
+
+            $table->json('shipping_address');
+            $table->json('billing_address');
 
             // Order details
             $table->decimal('subtotal', 10, 2);
