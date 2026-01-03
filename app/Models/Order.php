@@ -20,6 +20,7 @@ class Order extends Model
         'status',
         'subtotal',
         'tax',
+        'currency',
         'shipping_fee',
         'total',
     ];
@@ -37,5 +38,10 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }

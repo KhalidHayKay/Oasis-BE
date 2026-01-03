@@ -3,7 +3,7 @@
 namespace App\Services\Helpers;
 
 use App\Models\Cart;
-use App\Services\Support\CheckoutTotals;
+use App\DTOs\CheckoutTotals;
 
 class Calculator
 {

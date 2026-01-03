@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::prefix('checkout')->group(function () {
@@ -14,8 +16,13 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store']);
         Route::get('/{order}', [OrderController::class, 'show']);
-        // Route::post('/{order}/payments', [OrderPaymentController::class, 'store']);
+
+        Route::post('/{order}/payments', [PaymentController::class, 'store']);
     });
+});
+
+Route::prefix('webhooks')->group(function () {
+    Route::post('/stripe', [StripeWebhookController::class, 'handle']);
 });
 
 /*
@@ -32,10 +39,4 @@ Route::prefix('checkout')->group(function () {
     Route::post('/{checkout}/discounts', 'CheckoutDiscountController@store');
     Route::delete('/{checkout}/discounts/{code}', 'CheckoutDiscountController@destroy');
 });
-
-/*
-Route::prefix('webhooks')->group(function () {
-    Route::post('/payments', 'PaymentWebhookController@handle');
-});
-
 */

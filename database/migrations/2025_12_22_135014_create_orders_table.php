@@ -27,6 +27,7 @@ return new class extends Migration
             $table->decimal('tax', 10, 2)->default(0);
             $table->decimal('shipping_fee', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
+            $table->string('currency', 3)->default('USD');
 
             // Order status
             $table->enum('status', [

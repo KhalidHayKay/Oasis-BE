@@ -18,15 +18,17 @@ return new class extends Migration
             $table->string('transaction_reference')->unique(); // from payment gateway
             $table->string('payment_gateway'); // 'paystack', 'flutterwave', etc.
             $table->decimal('amount', 10, 2);
+            $table->string('currency', 3);
 
             $table->enum('status', [
                 'pending',
+                'initialized',
                 'successful',
                 'failed',
                 'cancelled',
             ])->default('pending');
 
-            $table->text('gateway_response')->nullable(); // full response as JSON
+            $table->json('gateway_response')->nullable(); // full response as JSON
             $table->timestamp('paid_at')->nullable();
 
             $table->timestamps();
