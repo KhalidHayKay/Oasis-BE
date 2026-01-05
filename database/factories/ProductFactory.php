@@ -30,15 +30,15 @@ class ProductFactory extends Factory
         return [
             'name'             => $this->faker->words(3, true),
             'description'      => $this->faker->paragraph(2),
-            'price'            => json_encode([
+            'price'            => [
                 'amount'   => $this->faker->randomFloat(0, 10, 500),
                 'currency' => 'USD',
                 'discount' => $this->faker->numberBetween(0, 50),
-            ]),
+            ],
             'stock'            => $this->faker->numberBetween(5, 20),
             'popularity_score' => $this->faker->numberBetween(1, 100),
             'rating'           => $this->faker->numberBetween(1, 5),
-            'colors'           => json_encode($this->faker->randomElements($hexColors, $this->faker->numberBetween(1, 3))),
+            'colors'           => $this->faker->randomElements($hexColors, $this->faker->numberBetween(1, 3)),
 
             'category_id'      => $this->faker->randomElement(Category::pluck('id')->toArray()),
         ];

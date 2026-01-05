@@ -17,9 +17,9 @@ class ProductResource extends JsonResource
         return [
             'id'            => $this->id,
             'name'          => $this->name,
-            'price'         => json_decode($this->price),
+            'price'         => $this->price,
             'popularity'    => $this->popularity_score,
-            'colors'        => json_decode($this->colors),
+            'colors'        => $this->colors,
             'featuredImage' => $this->whenLoaded('featuredImage', fn () => [
                 'src' => $this->featuredImage->image_path,
                 'alt' => $this->featuredImage->alt_text,

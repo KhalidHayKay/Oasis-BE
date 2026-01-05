@@ -21,6 +21,7 @@ class Product extends Model
     protected $casts = [
         'is_available' => 'boolean',
         'price'        => 'array',
+        'colors'       => 'array',
     ];
 
     public function images()

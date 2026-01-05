@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Helpers;
+namespace App\Support;
 
 use App\Models\Cart;
 use App\DTOs\CheckoutTotals;

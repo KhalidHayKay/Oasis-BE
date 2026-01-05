@@ -2,98 +2,99 @@
 
 namespace App\Services;
 
+use App\Models\CartItem;
 use App\Models\User;
 use App\Models\Product;
+use App\Support\Calculator;
 
 class CartService
 {
+    public function __construct(private readonly Calculator $calculator) {}
+
     public function show(User $user)
     {
-        $products = $user->cart->products;
+        $items = $user->cart->items;
 
-        return $products;
+        return $items;
     }
 
     public function addItem(array $data, User $user)
     {
         $product = Product::findOrFail($data['product_id']);
 
-        $cartProduct = $this->getCartProduct($user, $product);
+        $prevItem = $this->getCartItem($user, $product->id, $data['color']);
 
-        if ($cartProduct) {
-            return $this->incrementQuantity($user, $product, $data['quantity']);
+        if ($prevItem) {
+            return $this->incrementQuantity($prevItem, $data['quantity']);
         }
 
-        $user->cart->products()->attach($product->id, [
-            'quantity' => $data['quantity'],
-            // 'price'    => $product->price,
+        if (! in_array($data['color'], $product->colors)) {
+            throw new \InvalidArgumentException('Selected color is not available for this product.');
+        }
+
+        $price = $this->calculator->priceWithDiscount($product->price);
+
+        $item = $user->cart->items()->create([
+            'product_id'          => $product->id,
+            'product_name'        => $product->name,
+            'product_image_id'    => $product->featuredImage->id,
+            'product_description' => $product->description,
+            'color'               => $data['color'],
+            'unit_price'          => $price,
+            'quantity'            => $data['quantity'],
+            'subtotal'            => (int) $price * (int) $data['quantity'],
         ]);
 
-        return $user->cart->fresh('products');
+        return $item;
     }
 
-    public function incrementQuantity(User $user, Product $product, int $by = 1)
+    public function incrementQuantity(CartItem $item, int|null $by)
     {
-        $cartProduct = $this->getCartProduct($user, $product);
+        $item->increment('quantity', $by ?? 1);
 
-        if (! $cartProduct) {
-            throw new \RuntimeException('Product not in cart.');
-        }
-
-        $user->cart->products()->updateExistingPivot(
-            $product->id,
-            [
-                'quantity' => $cartProduct->pivot->quantity + $by,
-            ]
-        );
-
-        return $user->cart->fresh('products');
+        return $item;
     }
 
-    public function decrementQuantity(User $user, Product $product, int $by = 1)
+    public function decrementQuantity(CartItem $item, int|null $by)
     {
-        $cartProduct = $this->getCartProduct($user, $product);
-
-        if (! $cartProduct) {
-            throw new \RuntimeException('Product not in cart.');
-        }
-
-        $newQuantity = $cartProduct->pivot->quantity - $by;
+        $newQuantity = $item->quantity - ($by ?? 1);
 
         if ($newQuantity <= 0) {
-            return $this->removeItem($user, $product);
+            $this->removeItem($item);
         }
 
-        $user->cart->products()->updateExistingPivot(
-            $product->id,
-            ['quantity' => $newQuantity]
-        );
+        $item->update(['quantity' => $newQuantity]);
 
-        return $user->cart->fresh('products');
+        return $item;
     }
 
-    public function removeItem(User $user, Product $product)
+    public function removeItem(CartItem $item)
     {
-        $user->cart->products()->detach($product->id);
+        $item->delete();
 
-        return $user->cart->fresh('products');
+        return 'Item removed successfully.';
     }
 
     public function clear(User $user)
     {
-        $user->cart->products()->detach();
+        $user->cart->items()->delete();
 
-        return $user->cart->fresh('products');
+        return $user->cart->fresh('items');
     }
 
     /**
-     * Get a product from the user's cart
+     * Get a matching cart item for a user and product.
      */
-    protected function getCartProduct(User $user, Product $product)
+    protected function getCartItem(User $user, int $productId, ?string $color = null)
     {
-        return $user->cart
-            ->products()
-            ->where('product_id', $product->id)
-            ->first();
+        $query = $user->cart
+            ->items()
+            ->where('product_id', $productId);
+
+        if ($color !== null) {
+            $query->where('color', $color);
+        }
+
+        return $query->first();
     }
 }
