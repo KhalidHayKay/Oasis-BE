@@ -1,4 +1,5 @@
 <?php
+// dd(array_unique(explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3001'))));
 
 return [
 
@@ -19,7 +20,7 @@ return [
 
     'allowed_methods'          => ['*'],
 
-    'allowed_origins'          => array_unique(explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000'))),
+    'allowed_origins'          => array_unique(explode(',', env('CORS_ALLOWED_ORIGINS'))),
 
     'allowed_origins_patterns' => [],
 
