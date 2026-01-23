@@ -30,8 +30,6 @@ class CartController extends Controller
 
         $item = $this->service->addItem($data, $request->user());
 
-        // dd($item->image->image_path);
-
         return response()->json(CartItemResource::make($item), 201);
     }
 

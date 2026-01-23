@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Exceptions\CartValidationException;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\CheckoutSession;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutService
 {
@@ -15,91 +18,116 @@ class CheckoutService
     private const string UNAVAILABLE_PRODUCT = 'unavailable_product';
     private const string INSUFFICIENT_STOCK  = 'insufficient_stock';
 
-    public function validateCartForCheckout(Cart $cart, User $user): array
+    public function get(User $user)
     {
-        if ($cart->products->isEmpty()) {
-            return [
-                'ok'     => false,
-                'reason' => self::EMPTY_CART,
-                'issues' => [],
-            ];
+        $session = CheckoutSession::where('user_id', $user->id)
+            ->where('status', 'active')->first();
+
+        if (! $session) {
+            return null;
+        }
+
+        if ($session->expires_at->isPast()) {
+            $this->expire($session);
+            return null;
+        }
+
+        return $session;
+    }
+
+    public function validateCartForCheckout(User $user): CheckoutSession
+    {
+        $cart = $user->cart;
+
+        $checkoutSession = $this->get($user);
+
+        if ($checkoutSession) {
+            return $checkoutSession;
+        }
+
+        if ($cart->items->isEmpty()) {
+            throw new CartValidationException(self::EMPTY_CART);
         }
 
         $issues = [];
 
-        foreach ($cart->products as $product) {
-            if (! $product->is_available) {
+        foreach ($cart->items as $item) {
+            if (! $item->product->is_available) {
                 $issues[] = [
-                    'product_id' => $product->id,
+                    'product_id' => $item->product_id,
                     'type'       => self::UNAVAILABLE_PRODUCT,
-                    'message'    => "{$product->name} is no longer available",
+                    'message'    => "{$item->product_name} is no longer available",
                 ];
                 continue;
             }
 
-            if ($product->pivot->quantity > $product->stock) {
+            if ($item->quantity > $item->product->stock) {
                 $issues[] = [
-                    'product_id' => $product->id,
+                    'product_id' => $item->product_id,
                     'type'       => self::INSUFFICIENT_STOCK,
-                    'available'  => $product->stock,
-                    'requested'  => $product->pivot->quantity,
+                    'available'  => $item->product->stock,
+                    'requested'  => $item->quantity,
                 ];
             }
         }
 
         if (! empty($issues)) {
-            return [
-                'ok'     => false,
-                'reason' => self::CART_CONFLICT,
-                'issues' => $issues,
-            ];
+            throw new CartValidationException(self::CART_CONFLICT, $issues);
         }
 
-        $checkoutSession = CheckoutSession::where('cart_id', $cart->id)
-            ->where('status', 'active')->first();
+        $session = CheckoutSession::create([
+            'public_token' => Str::uuid(),
+            'cart_id'      => $cart->id,
+            'user_id'      => $user->id,
+            'expires_at'   => now()->addMinutes(15),
+            'current_step' => 'address',
+        ]);
 
-        if (! $checkoutSession) {
-            $checkoutSession = CheckoutSession::create([
-                'public_token' => Str::uuid(),
-                'cart_id'      => $cart->id,
-                'user_id'      => $user->id,
-                'expires_at'   => now()->addMinutes(15),
-            ]);
-        }
-
-        return [
-            'ok'                  => true,
-            'checkout_session_id' => $checkoutSession,
-            'saved_addresses'     => $user?->addresses,
-        ];
+        return $session;
     }
 
-    public function attachCustomerAndAddress(User $user, array $data): CheckoutSession
+    public function address(User $user, array $data): CheckoutSession
     {
         $checkoutSession = CheckoutSession::where('public_token', $data['checkout_token'])
+            ->where('user_id', $user->id)
             ->firstOrFail();
 
-        if ($checkoutSession->status !== 'active') {
-            throw new \RuntimeException('Checkout session is not active.');
+        $checkoutSession->update([
+            'customer_email'   => $user->email,
+            'shipping_address' => [
+                'shipping_fname'   => $data['shipping_fname'],
+                'shipping_lname'   => $data['shipping_lname'],
+                'shipping_phone'   => $data['shipping_phone'],
+                'shipping_address' => $data['shipping_address'],
+                'shipping_country' => $data['shipping_country'],
+                'shipping_city'    => $data['shipping_city'],
+            ],
+        ]);
+
+        $this->estimateCartTotal($user->cart);
+
+        return $checkoutSession->load(['cart', 'cart.items']);
+    }
+
+    protected function expire(CheckoutSession $session): void
+    {
+        DB::transaction(function () use ($session) {
+            $session->update(['status' => 'expired']);
+
+            // future-safe hooks:
+            // $session->cart->releaseInventory();
+            // event(new CheckoutExpired($session));
+        });
+    }
+
+    protected function estimateCartTotal(Cart $cart)
+    {
+        $total = 0;
+
+        foreach ($cart->items as $item) {
+            $total += ($item->unit_price * $item->quantity);
         }
 
-        $checkoutSession->customer_email = $user
-            ? $user->email
-            : $data['customer_email'];
-
-        $checkoutSession->user_id = $user?->id;
-
-        $checkoutSession->shipping_address = [
-            'name'    => $data['shipping_name'],
-            'phone'   => $data['shipping_phone'],
-            'address' => $data['shipping_address'],
-            'city'    => $data['shipping_city'],
-            'state'   => $data['shipping_state'],
-            'lga'     => $data['shipping_lga'],
-        ];
-
-        $checkoutSession->save();
-
-        return $checkoutSession;
+        $cart->update(['total_price' => $total]);
     }
 }

@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class CheckoutSessionResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'              => $this->id,
+            'publicToken'     => $this->public_token,
+            'customerEmail'   => $this->customer_email,
+            'userId'          => $this->user_id,
+            'cartId'          => $this->cart_id,
+            'shippingAddress' => $this->shipping_address,
+            'status'          => $this->status,
+            'currentStep'     => $this->current_step,
+            'expiresAt'       => $this->expires_at,
+            'createdAt'       => $this->created_at,
+            'updatedAt'       => $this->updated_at,
+            'cart'            => [
+                'id'         => $this->cart->id,
+                'totalPrice' => $this->cart->total_price,
+                'items'      => CartItemResource::collection($this->cart->items),
+            ],
+        ];
+    }
+}

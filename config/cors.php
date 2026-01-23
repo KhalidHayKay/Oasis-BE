@@ -1,5 +1,4 @@
 <?php
-// dd(array_unique(explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3001'))));
 
 return [
 

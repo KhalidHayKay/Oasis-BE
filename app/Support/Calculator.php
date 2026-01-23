@@ -35,7 +35,7 @@ class Calculator
             return $price;
         }
 
-        $discountAmount = (int) round($price * ($percentage / 100));
+        $discountAmount = round($price * ($percentage / 100));
 
         return max(0, $price - $discountAmount);
     }

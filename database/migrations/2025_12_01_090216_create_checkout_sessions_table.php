@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('shipping_address')->nullable();
 
             $table->enum('status', ['active', 'expired', 'converted',])->default('active');
+            $table->enum('current_step', ['checkout', 'address', 'payment', 'summary'])->default('checkout');
             $table->timestamp('expires_at');
 
             $table->timestamps();

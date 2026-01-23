@@ -13,6 +13,7 @@ class CheckoutSession extends Model
         'cart_id',
         'shipping_address',
         'status',
+        'current_step',
         'expires_at',
     ];
 
@@ -20,4 +21,9 @@ class CheckoutSession extends Model
         'shipping_address' => 'array',
         'expires_at'       => 'datetime',
     ];
+
+    public function cart()
+    {
+        return $this->belongsTo(Cart::class);
+    }
 }

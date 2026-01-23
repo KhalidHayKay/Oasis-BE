@@ -8,14 +8,15 @@ use App\Http\Controllers\Webhooks\StripeWebhookController;
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::prefix('checkout')->group(function () {
-        Route::get('/validate', [CheckoutController::class, 'validate']);
-        Route::post('/customer', [CheckoutController::class, 'attachCustomer']);
+        Route::get('/', [CheckoutController::class, 'show']);
+        Route::post('/', [CheckoutController::class, 'validate']);
+        Route::post('/address', [CheckoutController::class, 'address']);
     });
 
     Route::prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);
+        // Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store']);
-        Route::get('/{order}', [OrderController::class, 'show']);
+        // Route::get('/{order}', [OrderController::class, 'show']);
 
         Route::post('/{order}/payments', [PaymentController::class, 'store']);
     });

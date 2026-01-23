@@ -44,7 +44,7 @@ class AuthService
             ->first();
 
         if ($account) {
-            return $this->respondWithToken($account->user, 'Login successful');
+            return $this->respondWithToken($account->user);
         }
 
         // Find or create user (since social account does not exist)
@@ -66,7 +66,7 @@ class AuthService
 
         if ($user->wasRecentlyCreated) {
             Mail::to($user->email)->send(new AccountCreated($user->name));
-            return $this->respondWithToken($user, 'Registration successful');
+            return $this->respondWithToken($user);
         }
 
         // Verifying email if email was not verified prior to usage of social login
@@ -80,7 +80,7 @@ class AuthService
 
         $user->save();
 
-        return $this->respondWithToken($user, 'Login successful');
+        return $this->respondWithToken($user);
     }
 
     public function register(array $data)
@@ -130,9 +130,11 @@ class AuthService
 
     protected function respondWithToken(User $user)
     {
+        $user->tokens()->delete();
+
         return new AuthResponse(
             $user,
-            $user->createToken('auth_token')->plainTextToken
+            $user->createToken('auth_token', expiresAt: now()->addHour())->plainTextToken
         );
     }
 }

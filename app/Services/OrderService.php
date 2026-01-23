@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\CheckoutSession;
 use App\Models\OrderItem;
-use App\Services\Helpers\Calculator;
+use App\Support\Calculator;
 use Illuminate\Support\Facades\DB;
 
 class OrderService

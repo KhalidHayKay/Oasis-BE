@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CheckoutRequest extends FormRequest
+class CheckoutAddressRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -16,23 +16,20 @@ class CheckoutRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
+     *s
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'checkout_token'   => 'required|uuid',
+            'checkout_token'   => 'required|string|exists:checkout_sessions,public_token',
 
-            'customer_email'   => 'nullable|email|required_if:user,null',
-
-            // Shipping address
-            'shipping_name'    => 'required|string|max:255',
+            'shipping_fname'   => 'required|string|max:255',
+            'shipping_lname'   => 'required|string|max:255',
             'shipping_phone'   => 'required|string|max:20',
             'shipping_address' => 'required|string',
+            'shipping_country' => 'required|string',
             'shipping_city'    => 'required|string',
-            'shipping_state'   => 'required|string',
-            'shipping_lga'     => 'required|string',
         ];
     }
 }

@@ -31,7 +31,6 @@ return new class extends Migration
             // Commerce data
             $table->decimal('unit_price', 10, 2);
             $table->integer('quantity');
-            $table->decimal('subtotal', 10, 2); // unit_price * quantity
 
             $table->timestamps();
 

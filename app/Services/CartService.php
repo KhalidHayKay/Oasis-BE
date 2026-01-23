@@ -42,7 +42,6 @@ class CartService
             'color'               => $data['color'],
             'unit_price'          => $price,
             'quantity'            => $data['quantity'],
-            'subtotal'            => (int) $price * (int) $data['quantity'],
         ]);
 
         return $item;

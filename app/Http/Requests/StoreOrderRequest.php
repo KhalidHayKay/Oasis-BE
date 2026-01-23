@@ -24,8 +24,6 @@ class StoreOrderRequest extends FormRequest
         return [
             'checkout_token'      => 'required|string|exists:checkout_sessions,public_token',
 
-            'customer_email'      => 'nullable|email|required_if:user,null',
-
             'billing_name'        => 'required_if:is_same_as_shipping,false|string|max:255',
             'billing_phone'       => 'required_if:is_same_as_shipping,false|string|max:20',
             'billing_address'     => 'required_if:is_same_as_shipping,false|string',

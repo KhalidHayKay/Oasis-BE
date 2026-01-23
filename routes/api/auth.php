@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -26,8 +27,11 @@ Route::prefix('auth')->group(function () {
         Route::post('/forgot', [PasswordController::class, 'token']);
         Route::post('/reset', [PasswordController::class, 'reset']);
     });
-});
 
-Route::middleware(['auth:sanctum', 'verified'])->get('/check-email', function () {
-    return response()->json(['message' => 'Email is verified']);
+    Route::get('/check-email', function () {
+        return response()->json([
+            'email'   => Auth::user()->email,
+            'message' => 'Email is verified',
+        ]);
+    })->middleware(['auth:sanctum', 'verified']);
 });

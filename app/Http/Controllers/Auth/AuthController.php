@@ -65,6 +65,6 @@ class AuthController extends Controller
 
     private function makeCookie(string $token)
     {
-        return cookie('auth_token', $token, 60);
+        return cookie('auth_token', $token, 60); // 60 minutes to match token expiration
     }
 }

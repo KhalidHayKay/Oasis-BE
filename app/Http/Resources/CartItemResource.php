@@ -26,7 +26,6 @@ class CartItemResource extends JsonResource
             'color'        => $this->color,
             'unitPrice'    => $this->unit_price,
             'quantity'     => $this->quantity,
-            'subtotal'     => $this->subtotal,
         ];
     }
 }
