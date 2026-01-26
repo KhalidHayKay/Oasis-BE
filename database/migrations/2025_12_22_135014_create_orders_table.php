@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('checkout_session_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // buyer
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('order_number')->unique();
-            $table->string('customer_email');
 
+            $table->string('customer_email');
             $table->json('shipping_address');
             $table->json('billing_address');
 
@@ -29,15 +29,16 @@ return new class extends Migration
             $table->decimal('total', 10, 2);
             $table->string('currency', 3)->default('USD');
 
+            $table->string('stripe_payment_intent_id')->nullable()->unique();
+
             // Order status
             $table->enum('status', [
-                'pending',
-                'confirmed',
                 'processing',
+                'confirmed',
                 'shipped',
                 'delivered',
                 'cancelled',
-            ])->default('pending');
+            ])->default('processing');
 
             $table->timestamps();
         });

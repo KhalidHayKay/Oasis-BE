@@ -14,19 +14,28 @@ return new class extends Migration
         Schema::create('checkout_sessions', function (Blueprint $table) {
             $table->id();
             $table->uuid('public_token')->unique();
+            $table->foreignId('user_id')->nullable();
+            $table->foreignId('cart_id')->constrained();
 
-            $table->string('customer_email')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
-            $table->json('shipping_address')->nullable();
-
-            $table->enum('status', ['active', 'expired', 'converted',])->default('active');
-            $table->enum('current_step', ['checkout', 'address', 'payment', 'summary'])->default('checkout');
+            // Only checkout-specific fields
+            $table->enum('status', ['active', 'expired', 'converted'])->default('active');
+            $table->enum('current_step', ['address', 'summary', 'payment'])->default('address');
             $table->timestamp('expires_at');
 
-            $table->timestamps();
+            // Customer data (will be copied to order)
+            $table->string('customer_email')->nullable();
+            $table->json('shipping_address')->nullable();
+            $table->json('billing_address')->nullable();
 
-            $table->index(['status', 'expires_at']);
+            $table->string('stripe_payment_intent_id')->nullable();
+
+            // Totals
+            $table->integer('subtotal')->nullable();
+            $table->integer('tax')->nullable();
+            $table->integer('shipping_fee')->nullable();
+            $table->integer('total')->nullable();
+
+            $table->timestamps();
         });
     }
 

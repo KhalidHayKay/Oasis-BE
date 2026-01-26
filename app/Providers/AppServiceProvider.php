@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGatewayInterface;
 use App\Models\User;
+use App\Services\StripeGateway;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +16,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(
+            PaymentGatewayInterface::class,
+            StripeGateway::class
+        );
+
         Scramble::ignoreDefaultRoutes();
     }
 

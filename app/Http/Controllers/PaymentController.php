@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Http\Resources\CheckoutSessionResource;
 use App\Models\Payment;
+use Illuminate\Http\Request;
 use App\Services\PaymentService;
 
 class PaymentController extends Controller
@@ -15,13 +16,17 @@ class PaymentController extends Controller
         //
     }
 
-    public function store(Order $order)
+    public function store(Request $request)
     {
-        $data = $this->service->initialize($order);
+        $user = $request->user();
+        $data = $request->validate(['checkout_token' => 'required|string|exists:checkout_sessions,public_token']);
+
+        $data = $this->service->initialize($user, $data);
 
         return response()->json([
-            'status' => 'ok',
-            'data'   => $data,
+            'checkoutSession' => CheckoutSessionResource::make($data['session']),
+            'clientSecret'    => $data['client_secret'],
+            'reference'       => $data['reference'],
         ]);
 
     }

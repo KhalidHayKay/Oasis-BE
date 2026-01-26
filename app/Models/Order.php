@@ -12,22 +12,28 @@ class Order extends Model
 
     protected $fillable = [
         'checkout_session_id',
-        'customer_email',
-        'order_number',
         'user_id',
+        'order_number',
+        'customer_email',
         'shipping_address',
         'billing_address',
-        'status',
         'subtotal',
         'tax',
-        'currency',
         'shipping_fee',
         'total',
+        'currency',
+        'stripe_payment_intent_id',
+        'status',
     ];
 
     protected $casts = [
         'shipping_address' => 'array',
         'billing_address'  => 'array',
+        'subtotal'         => 'decimal:2',
+        'tax'              => 'decimal:2',
+        'shipping_fee'     => 'decimal:2',
+        'total'            => 'decimal:2',
+        'status'           => 'string',
     ];
 
     public function user()

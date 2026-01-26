@@ -8,6 +8,7 @@ use App\Models\CartItem;
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\CheckoutSession;
+use App\Support\Calculator;
 use Illuminate\Support\Facades\DB;
 
 class CheckoutService
@@ -17,6 +18,8 @@ class CheckoutService
 
     private const string UNAVAILABLE_PRODUCT = 'unavailable_product';
     private const string INSUFFICIENT_STOCK  = 'insufficient_stock';
+
+    public function __construct(protected readonly Calculator $calculator) {}
 
     public function get(User $user)
     {
@@ -104,7 +107,16 @@ class CheckoutService
             ],
         ]);
 
-        $this->estimateCartTotal($user->cart);
+        $totals = $this->calculator->checkoutFromCart($user->cart, $checkoutSession->shipping_address);
+
+        $checkoutSession->update([
+            'subtotal'     => $totals->subtotal,
+            'tax'          => $totals->tax,
+            'shipping_fee' => $totals->shipping,
+            'total'        => $totals->total,
+
+            'current_step' => 'summary',
+        ]);
 
         return $checkoutSession->load(['cart', 'cart.items']);
     }

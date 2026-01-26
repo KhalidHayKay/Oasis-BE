@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Order;
 use App\Models\Payment;
 use Stripe\StripeClient;
 use App\DTOs\GatewayInitResult;
 use App\Contracts\PaymentGatewayInterface;
+use App\Models\CheckoutSession;
 
 class StripeGateway implements PaymentGatewayInterface
 {
@@ -22,14 +22,18 @@ class StripeGateway implements PaymentGatewayInterface
         return 'stripe';
     }
 
-    public function initializePayment(Order $order, Payment $payment): GatewayInitResult
+    public function initializePayment(CheckoutSession $checkoutSession, Payment $payment): GatewayInitResult
     {
         $intent = $this->stripe->paymentIntents->create([
-            'amount'   => $payment->amount * 100, // amount in cents
-            'currency' => 'usd',
-            'metadata' => [
-                'order_id'   => $order->id,
-                'payment_id' => $payment->id,
+            'amount'                    => $payment->amount * 100, // amount in cents
+            'currency'                  => 'usd',
+            'metadata'                  => [
+                'checkout_session_id' => $checkoutSession->id,
+                'payment_id'          => $payment->id,
+                'user_id'             => $checkoutSession->user_id,
+            ],
+            'automatic_payment_methods' => [
+                'enabled' => true,
             ],
         ]);
 
@@ -42,5 +46,16 @@ class StripeGateway implements PaymentGatewayInterface
             clientSecret: $intent->client_secret,
             reference: $intent->id
         );
+    }
+
+    public function retrievePaymentIntent(string $paymentIntentId): object
+    {
+        $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
+
+        return (object) [
+            'clientSecret' => $paymentIntent->client_secret,
+            'reference'    => $paymentIntent->id,
+            'status'       => $paymentIntent->status,
+        ];
     }
 }

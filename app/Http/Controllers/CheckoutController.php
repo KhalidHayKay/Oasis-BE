@@ -45,7 +45,6 @@ class CheckoutController extends Controller
         $checkoutSession = $this->service->address($user, $data);
 
         return response()->json([
-            'success'          => true,
             'checkout_session' => CheckoutSessionResource::make($checkoutSession),
         ]);
     }

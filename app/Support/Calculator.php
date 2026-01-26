@@ -11,8 +11,8 @@ class Calculator
     {
         $subtotal = 0;
 
-        foreach ($cart->products as $product) {
-            $subtotal += $this->priceWithDiscount($product->price) * $product->pivot->quantity;
+        foreach ($cart->items as $item) {
+            $subtotal += $this->priceWithDiscount($item->product->price) * $item->quantity;
         }
 
         $shipping = $this->calculateShipping($shippingAddress, $cart);
@@ -43,7 +43,7 @@ class Calculator
     protected function calculateShipping(array $address, Cart $cart): int
     {
         // dummy logic
-        if ($address['state'] === 'Lagos') {
+        if ($address['shipping_city'] === 'Lagos') {
             return 1500;
         }
 

@@ -11,6 +11,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/', [CheckoutController::class, 'show']);
         Route::post('/', [CheckoutController::class, 'validate']);
         Route::post('/address', [CheckoutController::class, 'address']);
+        Route::post('/payment-intent', [PaymentController::class, 'store']);
     });
 
     Route::prefix('orders')->group(function () {
@@ -18,7 +19,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::post('/', [OrderController::class, 'store']);
         // Route::get('/{order}', [OrderController::class, 'show']);
 
-        Route::post('/{order}/payments', [PaymentController::class, 'store']);
     });
 });
 
