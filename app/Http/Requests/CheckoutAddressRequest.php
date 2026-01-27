@@ -22,14 +22,14 @@ class CheckoutAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'checkout_token'   => 'required|string|exists:checkout_sessions,public_token',
+            'checkout_token' => 'required|string|exists:checkout_sessions,public_token',
 
-            'shipping_fname'   => 'required|string|max:255',
-            'shipping_lname'   => 'required|string|max:255',
-            'shipping_phone'   => 'required|string|max:20',
-            'shipping_address' => 'required|string',
-            'shipping_country' => 'required|string',
-            'shipping_city'    => 'required|string',
+            'fname'          => 'required|string|max:255',
+            'lname'          => 'required|string|max:255',
+            'phone'          => 'required|string|max:20',
+            'address'        => 'required|string',
+            'country'        => 'required|string',
+            'city'           => 'required|string',
         ];
     }
 }

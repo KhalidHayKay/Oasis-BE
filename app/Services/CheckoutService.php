@@ -98,12 +98,12 @@ class CheckoutService
         $checkoutSession->update([
             'customer_email'   => $user->email,
             'shipping_address' => [
-                'shipping_fname'   => $data['shipping_fname'],
-                'shipping_lname'   => $data['shipping_lname'],
-                'shipping_phone'   => $data['shipping_phone'],
-                'shipping_address' => $data['shipping_address'],
-                'shipping_country' => $data['shipping_country'],
-                'shipping_city'    => $data['shipping_city'],
+                'fname'   => $data['fname'],
+                'lname'   => $data['lname'],
+                'phone'   => $data['phone'],
+                'address' => $data['address'],
+                'country' => $data['country'],
+                'city'    => $data['city'],
             ],
         ]);
 

@@ -25,16 +25,14 @@ class StripeGateway implements PaymentGatewayInterface
     public function initializePayment(CheckoutSession $checkoutSession, Payment $payment): GatewayInitResult
     {
         $intent = $this->stripe->paymentIntents->create([
-            'amount'                    => $payment->amount * 100, // amount in cents
-            'currency'                  => 'usd',
-            'metadata'                  => [
+            'amount'               => $payment->amount * 100, // amount in cents
+            'currency'             => 'usd',
+            'metadata'             => [
                 'checkout_session_id' => $checkoutSession->id,
                 'payment_id'          => $payment->id,
                 'user_id'             => $checkoutSession->user_id,
             ],
-            'automatic_payment_methods' => [
-                'enabled' => true,
-            ],
+            'payment_method_types' => ['card'],
         ]);
 
         $payment->update([

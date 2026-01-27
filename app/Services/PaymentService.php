@@ -51,7 +51,7 @@ class PaymentService
                 'currency'              => $checkoutSession->currency ?? 'USD',
                 'status'                => 'initialized',
 
-                'transaction_reference' => 'sdsdsdd',
+                'transaction_reference' => 'sdsdsddq',
             ]);
 
             $result = $this->gateway->initializePayment($checkoutSession, $payment);

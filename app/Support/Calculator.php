@@ -43,7 +43,7 @@ class Calculator
     protected function calculateShipping(array $address, Cart $cart): int
     {
         // dummy logic
-        if ($address['shipping_city'] === 'Lagos') {
+        if ($address['city'] === 'Lagos') {
             return 1500;
         }
 
