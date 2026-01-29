@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Payment;
 use Stripe\StripeClient;
-use App\DTOs\GatewayInitResult;
+use App\DTOs\GatewayIntentData;
 use App\Contracts\PaymentGatewayInterface;
 use App\Models\CheckoutSession;
 
@@ -14,7 +14,7 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        $this->stripe = new StripeClient(config('services.stripe.api_secret'));
     }
 
     public function getName(): string
@@ -22,7 +22,7 @@ class StripeGateway implements PaymentGatewayInterface
         return 'stripe';
     }
 
-    public function initializePayment(CheckoutSession $checkoutSession, Payment $payment): GatewayInitResult
+    public function initializePayment(CheckoutSession $checkoutSession, Payment $payment): GatewayIntentData
     {
         $intent = $this->stripe->paymentIntents->create([
             'amount'               => $payment->amount * 100, // amount in cents
@@ -35,25 +35,21 @@ class StripeGateway implements PaymentGatewayInterface
             'payment_method_types' => ['card'],
         ]);
 
-        $payment->update([
-            'reference'        => $intent->id,
-            'gateway_response' => $intent->toArray(),
-        ]);
-
-        return new GatewayInitResult(
+        return new GatewayIntentData(
             clientSecret: $intent->client_secret,
-            reference: $intent->id
+            reference: $intent->id,
+            additionalData: $intent->toArray()
         );
     }
 
-    public function retrievePaymentIntent(string $paymentIntentId): object
+    public function retrievePaymentIntent(string $paymentIntentId): GatewayIntentData
     {
         $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
 
-        return (object) [
-            'clientSecret' => $paymentIntent->client_secret,
-            'reference'    => $paymentIntent->id,
-            'status'       => $paymentIntent->status,
-        ];
+        return new GatewayIntentData(
+            clientSecret: $paymentIntent->client_secret,
+            reference: $paymentIntent->id,
+            status: $paymentIntent->status,
+        );
     }
 }

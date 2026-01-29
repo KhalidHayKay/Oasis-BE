@@ -21,6 +21,7 @@ class CheckoutSession extends Model
         'tax',
         'shipping_fee',
         'total',
+        'currency',
     ];
 
     protected $casts = [

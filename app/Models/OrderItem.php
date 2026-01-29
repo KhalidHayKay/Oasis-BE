@@ -10,10 +10,8 @@ class OrderItem extends Model
         'order_id',
         'product_id',
         'product_name',
+        'product_selected_color',
         'product_description',
-        'price',
-        'quantity',
-        'subtotal',
     ];
 
     public function order()

@@ -114,6 +114,7 @@ class CheckoutService
             'tax'          => $totals->tax,
             'shipping_fee' => $totals->shipping,
             'total'        => $totals->total,
+            'currency'     => 'USD',
 
             'current_step' => 'summary',
         ]);

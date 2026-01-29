@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('checkout_session_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('payment_id')->constrained()->onDelete('cascade');
             $table->string('order_number')->unique();
 
             $table->string('customer_email');
@@ -50,10 +50,8 @@ return new class extends Migration
 
             // Snapshot of product at time of purchase
             $table->string('product_name');
+            $table->string('product_selected_color');
             $table->text('product_description')->nullable();
-            $table->decimal('price', 10, 2); // price at time of purchase
-            $table->integer('quantity');
-            $table->decimal('subtotal', 10, 2); // price * quantity
 
             $table->timestamps();
         });

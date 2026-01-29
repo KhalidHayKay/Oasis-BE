@@ -11,11 +11,6 @@ class PaymentController extends Controller
 {
     public function __construct(private readonly PaymentService $service) {}
 
-    public function index()
-    {
-        //
-    }
-
     public function store(Request $request)
     {
         $user = $request->user();
@@ -24,24 +19,24 @@ class PaymentController extends Controller
         $data = $this->service->initialize($user, $data);
 
         return response()->json([
-            'checkoutSession' => CheckoutSessionResource::make($data['session']),
-            'clientSecret'    => $data['client_secret'],
-            'reference'       => $data['reference'],
+            'checkoutSession' => CheckoutSessionResource::make($data->session),
+            'clientSecret'    => $data->clientSecret,
+            'reference'       => $data->reference,
         ]);
 
     }
 
+    public function confirm(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate(['reference' => 'required|string|exists:payments,transaction_reference']);
+
+        $result = $this->service->confirm($user, $data['reference']);
+
+        return response()->json($result);
+    }
+
     public function show(Payment $payment)
-    {
-        //
-    }
-
-    public function update(Payment $payment)
-    {
-        //
-    }
-
-    public function destroy(Payment $payment)
     {
         //
     }

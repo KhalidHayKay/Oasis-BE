@@ -34,6 +34,7 @@ return new class extends Migration
             $table->integer('tax')->nullable();
             $table->integer('shipping_fee')->nullable();
             $table->integer('total')->nullable();
+            $table->string('currency', 3)->nullable();
 
             $table->timestamps();
         });

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('checkout_session_id')->constrained()->onDelete('cascade');
-            $table->foreignId('order_id')->nullable()->constrained()->onDelete('cascade');
 
             $table->string('transaction_reference')->nullable()->unique(); // from payment gateway
             $table->string('payment_gateway'); // 'paystack', 'flutterwave', etc.

@@ -8,7 +8,6 @@ class Payment extends Model
 {
     protected $fillable = [
         'checkout_session_id',
-        'order_id',
         'transaction_reference',
         'payment_gateway',
         'amount',
@@ -29,6 +28,6 @@ class Payment extends Model
 
     public function order()
     {
-        return $this->belongsTo(Order::class);
+        return $this->hasOne(Order::class);
     }
 }

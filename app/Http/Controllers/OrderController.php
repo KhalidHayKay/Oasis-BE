@@ -28,7 +28,7 @@ class OrderController extends Controller
         $data = $request->validated();
 
         try {
-            $result = $this->service->make($data, $user);
+            $result = $this->service->makeFromCart($data, $user);
 
             return response()->json([
                 'message'  => 'Order created successfully',

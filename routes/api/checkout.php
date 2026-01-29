@@ -11,14 +11,18 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/', [CheckoutController::class, 'show']);
         Route::post('/', [CheckoutController::class, 'validate']);
         Route::post('/address', [CheckoutController::class, 'address']);
-        Route::post('/payment-intent', [PaymentController::class, 'store']);
     });
 
     Route::prefix('orders')->group(function () {
-        // Route::get('/', [OrderController::class, 'index']);
+        Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store']);
-        // Route::get('/{order}', [OrderController::class, 'show']);
+        Route::get('/{order}', [OrderController::class, 'show']);
 
+    });
+
+    Route::prefix('payment')->group(function () {
+        Route::post('/intent', [PaymentController::class, 'store']);
+        Route::post('/confirm', [PaymentController::class, 'confirm']);
     });
 });
 

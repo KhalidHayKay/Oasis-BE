@@ -23,6 +23,7 @@ class ForceJsonResponse
             'health',
             'api/auth/provider/*',
             'auth/error',
+            'api/webhooks/*',
         ];
 
         // If Accept header is present, not JSON, and route doesn't match any allowed pattern

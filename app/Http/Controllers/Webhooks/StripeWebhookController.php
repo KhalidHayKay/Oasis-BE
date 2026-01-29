@@ -6,11 +6,15 @@ use Stripe\Webhook;
 use App\Models\Payment;
 use Stripe\PaymentIntent;
 use Illuminate\Http\Request;
+use App\Services\OrderService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
 class StripeWebhookController extends Controller
 {
+    public function __construct(protected readonly OrderService $orderService) {}
+
     public function handle(Request $request)
     {
         $payload = $request->getContent();
@@ -20,10 +24,13 @@ class StripeWebhookController extends Controller
             $event = Webhook::constructEvent(
                 $payload,
                 $sig,
-                config('services.stripe.secret')
+                config('services.stripe.webhook_secret')
             );
         } catch (\Throwable $e) {
-            return response('Invalid signature', 400);
+            Log::error('Stripe Webhook Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Invalid signature',
+            ], 400);
         }
 
         match ($event->type) {
@@ -43,40 +50,30 @@ class StripeWebhookController extends Controller
     {
         DB::transaction(function () use ($intent) {
 
-            $payment = Payment::where('reference', $intent->id)
+            $payment = Payment::where('transaction_reference', $intent->id)
                 ->lockForUpdate()
                 ->first();
 
-            if (! $payment) {
-                return; // Unknown payment, ignore safely
+            // Unknown payment or already processed
+            if (! $payment || $payment->status === 'successful') {
+                return;
             }
 
-            if ($payment->status === 'successful') {
-                return; // Idempotent: already processed
-            }
-
-            // Amount verification (MANDATORY)
+            // Amount verification
             if ($payment->amount !== $intent->amount_received) {
+                $payment->update(['status' => 'failed']);
                 throw new \RuntimeException('Payment amount mismatch');
             }
 
             $payment->update([
                 'status'       => 'successful',
                 'raw_response' => $intent->toArray(),
+                'paid_at'      => now(),
             ]);
 
-            $order = $payment->order()->lockForUpdate()->first();
+            $order = $this->orderService->makeFromPayment($payment);
 
-            if ($order->status !== 'paid') {
-                $order->update([
-                    'status' => 'paid',
-                ]);
-            }
-
-            // Post-payment side effects
-            // Inventory::deduct($order)
-            // Cart::clear($order->user_id)
-            // Dispatch OrderPaid job
+            Log::info('Order #' . $order->id . ' created for Payment #' . $payment->id);
         });
     }
 
@@ -84,7 +81,7 @@ class StripeWebhookController extends Controller
     {
         DB::transaction(function () use ($intent) {
 
-            $payment = Payment::where('reference', $intent->id)
+            $payment = Payment::where('transaction_reference', $intent->id)
                 ->lockForUpdate()
                 ->first();
 

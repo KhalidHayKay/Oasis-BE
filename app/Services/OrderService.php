@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\CheckoutSession;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Support\Calculator;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +14,44 @@ class OrderService
 {
     public function __construct(protected readonly Calculator $calculator) {}
 
-    public function make(array $data, User $user): array
+    public function makeFromPayment(Payment $payment)
+    {
+        $checkoutSession = CheckoutSession::where('id', $payment->checkout_session_id)->firstOrfail();
+
+        $order = $payment->order()->create([
+            'user_id'          => $checkoutSession->user_id,
+            'order_number'     => $this->generateOrderNumber(),
+
+            'customer_email'   => $checkoutSession->customer_email,
+            'shipping_address' => $checkoutSession->shipping_address,
+            // todo: 'get billing address from payment method'
+            'billing_address'  => $checkoutSession->billing_address,
+
+            'subtotal'         => $checkoutSession->subtotal,
+            'tax'              => $checkoutSession->tax,
+            'shipping_fee'     => $checkoutSession->shipping_fee,
+            'total'            => $checkoutSession->total,
+            'currency'         => $checkoutSession->currency,
+
+            'status'           => 'confirmed',
+        ]);
+
+        foreach ($checkoutSession->cart->items as $item) {
+            $order->items()->create([
+                'order_id'               => $order->id,
+                'product_id'             => $item->product_id,
+                'product_name'           => $item->product_name,
+                'product_selected_color' => $item->color,
+                'product_description'    => $item->product_description ?? null,
+            ]);
+        }
+
+        $this->runSideEffects($order);
+
+        return $order;
+    }
+
+    public function makeFromCart(array $data, User $user): array
     {
         $cart = $user->cart;
 
@@ -65,15 +103,13 @@ class OrderService
                 'status'              => 'pending',
             ]);
 
-            foreach ($cart->products as $product) {
-                OrderItem::create([
-                    'order_id'            => $order->id,
-                    'product_id'          => $product->id,
-                    'product_name'        => $product->name,
-                    'product_description' => $product->description ?? null,
-                    'price'               => $this->calculator->priceWithDiscount($product->price),
-                    'quantity'            => $product->pivot->quantity,
-                    'subtotal'            => (int) $product->price * $product->pivot->quantity,
+            foreach ($cart->items as $item) {
+                $order->items()->create([
+                    'order_id'               => $order->id,
+                    'product_id'             => $item->product_id,
+                    'product_name'           => $item->product_name,
+                    'product_selected_color' => $item->color,
+                    'product_description'    => $item->product_description ?? null,
                 ]);
             }
 
@@ -91,6 +127,14 @@ class OrderService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    private function runSideEffects(Order $order)
+    {
+        // Post-payment side effects
+        // Inventory::deduct($order);
+        // Cart::clear($order->user_id);
+        // Dispatch OrderPaid job
     }
 
     private function generateOrderNumber()
