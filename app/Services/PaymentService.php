@@ -3,18 +3,17 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\Order;
 use App\Models\Payment;
 use App\Models\CheckoutSession;
 use Illuminate\Support\Facades\DB;
 use App\Contracts\PaymentGatewayInterface;
-use App\DTOs\PaymentInitResult;
+use App\DTOs\PaymentIntentData;
 
 class PaymentService
 {
     public function __construct(private readonly PaymentGatewayInterface $gateway) {}
 
-    public function initialize(User $user, array $data): PaymentInitResult
+    public function initialize(User $user, array $data): PaymentIntentData
     {
         $checkoutSession = CheckoutSession::where('public_token', $data['checkout_token'])
             ->where('user_id', $user->id)
@@ -24,9 +23,11 @@ class PaymentService
             throw new \RuntimeException('Checkout session is no longer valid.');
         }
 
-        if ($checkoutSession->stripe_payment_intent_id) {
+        $payment = $checkoutSession->payment;
+
+        if ($payment && $payment->status === 'pending') {
             $result = $this->gateway->retrievePaymentIntent(
-                $checkoutSession->stripe_payment_intent_id
+                $payment->transaction_reference
             );
 
             // If payment already succeeded, prevent re-payment
@@ -34,8 +35,7 @@ class PaymentService
                 throw new \RuntimeException('Payment already completed for this checkout.');
             }
 
-            return new PaymentInitResult(
-                $checkoutSession,
+            return new PaymentIntentData(
                 $result->clientSecret,
                 $result->reference
             );
@@ -46,11 +46,12 @@ class PaymentService
 
         try {
             $payment = Payment::create([
+                'user_id'             => $user->id,
                 'checkout_session_id' => $checkoutSession->id,
                 'payment_gateway'     => $this->gateway->getName(),
                 'amount'              => $checkoutSession->total,
                 'currency'            => $checkoutSession->currency,
-                'status'              => 'initialized',
+                'status'              => 'pending',
             ]);
 
             $result = $this->gateway->initializePayment($checkoutSession, $payment);
@@ -61,14 +62,12 @@ class PaymentService
             ]);
 
             $checkoutSession->update([
-                'stripe_payment_intent_id' => $result->reference,
-                'current_step'             => 'payment',
+                'current_step' => 'payment',
             ]);
 
             DB::commit();
 
-            return new PaymentInitResult(
-                $checkoutSession,
+            return new PaymentIntentData(
                 $result->clientSecret,
                 $result->reference
             );
@@ -81,23 +80,66 @@ class PaymentService
 
     public function confirm(User $user, string $reference)
     {
-        $payment = $this->getPaymentByReference($reference)
+        $payment = $this->getByReference($reference)
             ->where('user_id', $user->id)->first();
 
         if (! $payment) {
             throw new \InvalidArgumentException('Payment not found.');
         }
 
-        return [
+        $response = [
             'status'  => $payment->status,
-            'orderId' => $payment->order->id,
+            'orderId' => $payment->order?->id,
         ];
+
+        switch ($payment->status) {
+            case 'successful':
+                if (! $payment->order) {
+                    // Payment successful but order not created yet - still processing
+                    $response['message'] = 'Payment confirmed, creating your order...';
+                    $response['status']  = 'processing';
+                } else {
+                    $response['message'] = 'Payment completed successfully.';
+                }
+                break;
+
+            case 'failed':
+                $response['message'] = 'Payment failed.';
+                $response['error'] = $payment->failure_reason ?? 'An error occurred during payment processing.';
+                break;
+
+            case 'pending':
+                $response['message'] = 'Payment is still being processed.';
+                break;
+
+            case 'requires_attention':
+                $response['message'] = 'Payment requires attention. Please contact support.';
+                break;
+
+            default:
+                $response['message'] = 'Payment status unknown.';
+        }
+
+        return $response;
     }
 
-    public function getPaymentByReference(string $reference): ?Payment
+    public function getByReference(string $reference): ?Payment
     {
         $payment = Payment::where('transaction_reference', $reference)->first();
 
         return $payment;
+    }
+
+    public function getIntentBySession(string $sessionId)
+    {
+        $payment = Payment::where('checkout_session_id', $sessionId)->first();
+
+        if ($payment->status !== 'pending') {
+            throw new \RuntimeException('No pending payment found for this session.');
+        }
+
+        $intent = $this->gateway->retrievePaymentIntent($payment->transaction_reference);
+
+        return $intent;
     }
 }

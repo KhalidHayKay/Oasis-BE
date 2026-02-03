@@ -21,6 +21,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     });
 
     Route::prefix('payment')->group(function () {
+        Route::get('/show', [PaymentController::class, 'show']);
         Route::post('/intent', [PaymentController::class, 'store']);
         Route::post('/confirm', [PaymentController::class, 'confirm']);
     });

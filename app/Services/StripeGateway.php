@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Payment;
 use Stripe\StripeClient;
-use App\DTOs\GatewayIntentData;
+use App\DTOs\PaymentIntentData;
 use App\Contracts\PaymentGatewayInterface;
 use App\Models\CheckoutSession;
 
@@ -22,7 +22,7 @@ class StripeGateway implements PaymentGatewayInterface
         return 'stripe';
     }
 
-    public function initializePayment(CheckoutSession $checkoutSession, Payment $payment): GatewayIntentData
+    public function initializePayment(CheckoutSession $checkoutSession, Payment $payment): PaymentIntentData
     {
         $intent = $this->stripe->paymentIntents->create([
             'amount'               => $payment->amount * 100, // amount in cents
@@ -35,18 +35,18 @@ class StripeGateway implements PaymentGatewayInterface
             'payment_method_types' => ['card'],
         ]);
 
-        return new GatewayIntentData(
+        return new PaymentIntentData(
             clientSecret: $intent->client_secret,
             reference: $intent->id,
             additionalData: $intent->toArray()
         );
     }
 
-    public function retrievePaymentIntent(string $paymentIntentId): GatewayIntentData
+    public function retrievePaymentIntent(string $paymentIntentId): PaymentIntentData
     {
         $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
 
-        return new GatewayIntentData(
+        return new PaymentIntentData(
             clientSecret: $paymentIntent->client_secret,
             reference: $paymentIntent->id,
             status: $paymentIntent->status,

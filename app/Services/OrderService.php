@@ -24,29 +24,27 @@ class OrderService
 
             'customer_email'   => $checkoutSession->customer_email,
             'shipping_address' => $checkoutSession->shipping_address,
-            // todo: 'get billing address from payment method'
-            'billing_address'  => $checkoutSession->billing_address,
+            // todo: 'get billing address from payment method somehow'
+            'billing_address'  => $checkoutSession->shipping_address,
 
             'subtotal'         => $checkoutSession->subtotal,
             'tax'              => $checkoutSession->tax,
             'shipping_fee'     => $checkoutSession->shipping_fee,
             'total'            => $checkoutSession->total,
             'currency'         => $checkoutSession->currency,
-
             'status'           => 'confirmed',
         ]);
 
-        foreach ($checkoutSession->cart->items as $item) {
+        foreach ($checkoutSession->checkoutItems as $item) {
             $order->items()->create([
                 'order_id'               => $order->id,
                 'product_id'             => $item->product_id,
                 'product_name'           => $item->product_name,
-                'product_selected_color' => $item->color,
-                'product_description'    => $item->product_description ?? null,
+                'product_selected_color' => $item->product_selected_color,
+                'product_description'    => $item->product_description,
+                'quantity'               => $item->quantity,
             ]);
         }
-
-        $this->runSideEffects($order);
 
         return $order;
     }
@@ -127,14 +125,6 @@ class OrderService
             DB::rollBack();
             throw $e;
         }
-    }
-
-    private function runSideEffects(Order $order)
-    {
-        // Post-payment side effects
-        // Inventory::deduct($order);
-        // Cart::clear($order->user_id);
-        // Dispatch OrderPaid job
     }
 
     private function generateOrderNumber()

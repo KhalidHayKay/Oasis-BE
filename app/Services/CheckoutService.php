@@ -2,14 +2,15 @@
 
 namespace App\Services;
 
-use App\Exceptions\CartValidationException;
 use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\User;
+use App\Models\CartItem;
+use App\Support\Calculator;
 use Illuminate\Support\Str;
 use App\Models\CheckoutSession;
-use App\Support\Calculator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Exceptions\CartValidationException;
 
 class CheckoutService
 {
@@ -120,6 +121,42 @@ class CheckoutService
         ]);
 
         return $checkoutSession->load(['cart', 'cart.items']);
+    }
+
+    public function captureCheckoutItems(CheckoutSession $session): void
+    {
+        if ($session->hasItemsCaptured()) {
+            Log::info('Checkout items already captured for session #' . $session->id);
+            return;
+        }
+
+        $cart = $session->cart->load('items.product');
+
+        foreach ($cart->items as $cartItem) {
+            $session->checkoutItems()->create([
+                'product_id'             => $cartItem->product_id,
+                'product_name'           => $cartItem->product_name,
+                'product_selected_color' => $cartItem->color,
+                'product_description'    => $cartItem->product_description,
+                'price_at_checkout'      => $cartItem->unit_price,
+                'quantity'               => $cartItem->quantity ?? 1,
+            ]);
+        }
+
+        $session->update(['items_captured_at' => now()]);
+
+        Log::info('Captured ' . $cart->items->count() . ' items for checkout session #' . $session->id);
+    }
+
+    public function completeCheckout(CheckoutSession $session): void
+    {
+        // Clear cart items
+        $session->cart->items()->delete();
+
+        // Mark session as converted
+        $session->update(['status' => 'converted']);
+
+        Log::info('Checkout completed for session #' . $session->id);
     }
 
     protected function expire(CheckoutSession $session): void

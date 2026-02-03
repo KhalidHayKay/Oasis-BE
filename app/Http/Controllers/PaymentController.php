@@ -14,30 +14,35 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $data = $request->validate(['checkout_token' => 'required|string|exists:checkout_sessions,public_token']);
+        $data = $request->validate(['checkout_token' => 'required|string']);
 
         $data = $this->service->initialize($user, $data);
 
         return response()->json([
-            'checkoutSession' => CheckoutSessionResource::make($data->session),
-            'clientSecret'    => $data->clientSecret,
-            'reference'       => $data->reference,
+            'clientSecret' => $data->clientSecret,
+            'reference'    => $data->reference,
         ]);
-
     }
 
     public function confirm(Request $request)
     {
         $user = $request->user();
-        $data = $request->validate(['reference' => 'required|string|exists:payments,transaction_reference']);
+        $data = $request->validate(['reference' => 'required|string']);
 
         $result = $this->service->confirm($user, $data['reference']);
 
         return response()->json($result);
     }
 
-    public function show(Payment $payment)
+    public function show(Request $request)
     {
-        //
+        $data = $request->validate(['checkout_session_id' => 'required|string']);
+
+        $result = $this->service->getIntentBySession($data['checkout_session_id']);
+
+        return response()->json([
+            'clientSecret' => $result->clientSecret,
+            'reference'    => $result->reference,
+        ]);
     }
 }

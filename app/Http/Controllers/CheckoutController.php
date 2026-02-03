@@ -15,13 +15,13 @@ class CheckoutController extends Controller
     {
         $user = $request->user();
 
-        $result = $this->service->get($user);
+        $session = $this->service->get($user);
 
-        if (! $result) {
+        if (! $session) {
             return response()->json(['message' => 'No active checckout session'], 404);
         }
 
-        return CheckoutSessionResource::make($result);
+        return CheckoutSessionResource::make($session);
     }
 
     public function validate(Request $request)

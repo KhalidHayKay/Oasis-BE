@@ -20,7 +20,7 @@ return new class extends Migration
 
             $table->string('customer_email');
             $table->json('shipping_address');
-            $table->json('billing_address');
+            $table->json('billing_address')->nullable();
 
             // Order details
             $table->decimal('subtotal', 10, 2);
@@ -52,6 +52,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->string('product_selected_color');
             $table->text('product_description')->nullable();
+            $table->integer('quantity')->default(1);
 
             $table->timestamps();
         });
