@@ -55,7 +55,7 @@ class PaymentService
             ]);
 
             $result = $this->gateway->initializePayment($checkoutSession, $payment);
-
+            
             $payment->update([
                 'transaction_reference' => $result->reference,
                 'gateway_response'      => $result->additionalData,

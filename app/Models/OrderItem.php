@@ -12,10 +12,17 @@ class OrderItem extends Model
         'product_name',
         'product_selected_color',
         'product_description',
+        'price_at_checkout',
+        'quantity',
     ];
 
     public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 }

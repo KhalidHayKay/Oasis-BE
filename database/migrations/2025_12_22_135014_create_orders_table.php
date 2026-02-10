@@ -52,6 +52,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->string('product_selected_color');
             $table->text('product_description')->nullable();
+            $table->decimal('price_at_checkout', 10, 2);
             $table->integer('quantity')->default(1);
 
             $table->timestamps();

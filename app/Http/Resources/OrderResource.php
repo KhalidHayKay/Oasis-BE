@@ -15,24 +15,24 @@ class OrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'                    => $this->id,
-            'userId'                => $this->user_id,
-            'paymentId'             => $this->payment_id,
-            'orderNumber'           => $this->order_number,
-            'customerEmail'         => $this->customer_email,
-            'shippingAddress'       => $this->shipping_address,
-            'billingAddress'        => $this->billing_address,
-            'subtotal'              => (float) $this->subtotal,
-            'tax'                   => (float) $this->tax,
-            'shippingFee'           => (float) $this->shipping_fee,
-            'total'                 => (float) $this->total,
-            'currency'              => $this->currency,
-            'stripePaymentIntentId' => $this->stripe_payment_intent_id,
-            'status'                => $this->status,
-            'createdAt'             => $this->created_at?->toIso8601String(),
-            'updatedAt'             => $this->updated_at?->toIso8601String(),
-            'items'                 => OrderItemResource::collection($this->whenLoaded('items')),
-            'user'                  => new UserResource($this->whenLoaded('user')),
+            'id'              => $this->id,
+            'userId'          => $this->user_id,
+            'orderNumber'     => $this->order_number,
+            'customerEmail'   => $this->customer_email,
+            'shippingAddress' => AddressResource::make($this->shipping_address),
+            'billingAddress'  => AddressResource::make($this->billing_address),
+            'subtotal'        => (float) $this->subtotal,
+            'tax'             => (float) $this->tax,
+            'shippingFee'     => (float) $this->shipping_fee,
+            'total'           => (float) $this->total,
+            'currency'        => $this->currency,
+            'status'          => $this->status,
+            'createdAt'       => $this->created_at?->toIso8601String(),
+            'paymentRef'      => $this->whenLoaded(
+                'payment',
+                fn () => $this->payment->transaction_reference
+            ),
+            'items'           => OrderItemResource::collection($this->whenLoaded('items')),
         ];
     }
 }

@@ -6,6 +6,8 @@ use App\Models\Order;
 use App\Services\OrderService;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
+use App\Http\Resources\OrderPreviewResource;
+use App\Http\Resources\OrderResource;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -16,37 +18,16 @@ class OrderController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
-            'orders' => $user->orders,
-        ]);
-    }
+        $result = $this->service->getAll($user);
 
-    public function store(StoreOrderRequest $request)
-    {
-        $user = $request->user();
-        $request->merge(['user' => $user]);
-        $data = $request->validated();
-
-        try {
-            $result = $this->service->makeFromCart($data, $user);
-
-            return response()->json([
-                'message'  => 'Order created successfully',
-                'order'    => $result['order'],
-                'nextStep' => 'payment',
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to create order',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+        return OrderPreviewResource::collection($result);
     }
 
     public function show(Order $order)
     {
-        //
+        $result = $this->service->get($order);
+
+        return OrderResource::make($result);
     }
 
     public function update(UpdateOrderRequest $request, Order $order)
