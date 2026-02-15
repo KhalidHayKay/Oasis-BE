@@ -14,6 +14,7 @@ use App\DTOs\AuthResponse;
 use App\Exceptions\EmailNotVerifiedException;
 use App\Exceptions\InvalidLoginCredentialException;
 use Laravel\Socialite\Contracts\User as SocialUser;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
@@ -96,7 +97,12 @@ class AuthService
 
     public function logout(User $user)
     {
-        $user->currentAccessToken()->delete();
+        /** @var PersonalAccessToken|null $token */
+        $token = $user->currentAccessToken();
+
+        if ($token) {
+            $token->delete();
+        }
     }
 
     private function sendEmailVerificationCode(User $user)

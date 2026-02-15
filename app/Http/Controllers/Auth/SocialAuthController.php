@@ -7,6 +7,8 @@ use App\Services\AuthService;
 use Laravel\Socialite\Socialite;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\SocialiteManager;
 
 class SocialAuthController extends Controller
 {
@@ -26,26 +28,11 @@ class SocialAuthController extends Controller
                 ->stateless()
                 ->user();
 
-            $this->authService->socialLogin($socialUser, $provider);
+            $response = $this->authService->socialLogin($socialUser, $provider);
 
-            // Find or create user
-            // $user = User::updateOrCreate(
-            //     ['email' => $socialUser->getEmail()],
-            //     [
-            //         'name' => $socialUser->getName(),
-            //         'provider' => $provider,
-            //         'provider_id' => $socialUser->getId(),
-            //         'avatar' => $socialUser->getAvatar(),
-            //     ]
-            // );
+            $cookie = cookie('auth_token', $response->token, 60);
 
-            // Generate Sanctum token
-            // $token = $user->createToken('auth-token')->plainTextToken;
-
-            // Redirect back to frontend with token
-            // $frontendUrl = config('app.frontend_url');
-            // return redirect()->away("{$frontendUrl}/auth/callback?token={$token}");
-
+            return response()->view('auth.popup')->cookie($cookie);
         } catch (\Exception $e) {
             Log::error($e);
             throw $e;
