@@ -29,7 +29,7 @@ class Calculator
     public function priceWithDiscount(array $priceArr): int
     {
         $price      = $priceArr['amount'];
-        $percentage = $priceArr['percentage'] ?? 0;
+        $percentage = $priceArr['discount'];
 
         if (! $percentage || $percentage <= 0) {
             return $price;
@@ -44,10 +44,10 @@ class Calculator
     {
         // dummy logic
         if ($address['city'] === 'Lagos') {
-            return 1500;
+            return 50;
         }
 
-        return 3000;
+        return 100;
     }
 
     protected function calculateTax(int $subtotal, array $address): int
