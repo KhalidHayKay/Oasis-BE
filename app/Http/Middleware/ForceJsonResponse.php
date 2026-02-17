@@ -24,7 +24,6 @@ class ForceJsonResponse
             'api/auth/provider/*',
             'auth/error',
             'api/webhooks/*',
-            'debug',
         ];
 
         // If Accept header is present, not JSON, and route doesn't match any allowed pattern
