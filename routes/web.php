@@ -18,3 +18,12 @@ if (app()->environment('local')) {
         ]);
     });
 }
+
+Route::get('/debug', function () {
+    return [
+        'scheme'           => request()->getScheme(),
+        'secure'           => request()->isSecure(),
+        'https_server_var' => request()->server('HTTPS'),
+        'forwarded_proto'  => request()->header('X-Forwarded-Proto'),
+    ];
+});
