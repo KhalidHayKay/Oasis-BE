@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\StripeGateway;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Gate::define('viewApiDocs', function (?User $user = null) {
             $token    = request()->query('token');
             $envToken = env('APP_DOCS_ACCESS_TOKEN');

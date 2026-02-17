@@ -6,17 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BlogDetailResource;
 use App\Http\Resources\BlogResource;
 use App\Services\BlogService;
+use Illuminate\Http\Request;
 
 class BlogController extends Controller
 {
     public function __construct(private readonly BlogService $service) {}
 
-    /**
-     * GET /api/blogs
-     *
-     * Paginated list of blogs (body excluded).
-     */
-    public function index()
+    public function index(Request $request)
     {
         $blogs = $this->service->getPaginatedBlogs();
 
