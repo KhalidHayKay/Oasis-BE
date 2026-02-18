@@ -31,7 +31,7 @@ class ProductFactory extends Factory
             'name'             => $this->faker->words(3, true),
             'description'      => $this->faker->paragraph(2),
             'price'            => [
-                'amount'   => $this->faker->randomFloat(0, 10, 500),
+                'amount'   => $this->faker->randomFloat(0, 10, 300),
                 'currency' => 'USD',
                 'discount' => $this->faker->numberBetween(0, 50),
             ],

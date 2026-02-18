@@ -30,7 +30,10 @@ class ProductDetailResource extends JsonResource
                 'src' => $image->image_path,
                 'alt' => $image->alt_text,
             ])),
-            'category'      => $this->whenLoaded('category', fn () => $this->category->name),
+            'category'      => $this->whenLoaded('category', fn () => [
+                'name' => $this->category->name,
+                'slug' => $this->category->slug,
+            ]),
             'tags'          => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')),
             'createdAt'     => $this->created_at,
         ];
