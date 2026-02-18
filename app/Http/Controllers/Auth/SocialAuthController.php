@@ -7,8 +7,9 @@ use App\Services\AuthService;
 use Laravel\Socialite\Socialite;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Laravel\Socialite\SocialiteManager;
+use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class SocialAuthController extends Controller
 {
@@ -16,11 +17,11 @@ class SocialAuthController extends Controller
 
     public function redirect(Request $request, string $provider)
     {
-        $returnUrl = $request->query('return_url', '/');
+        $returnUrl = $request->query('return_path', '/');
 
         return Socialite::driver($provider)
             ->stateless()
-            ->with(['state' => base64_encode(json_encode(['return_url' => $returnUrl]))])
+            ->with(['state' => base64_encode(json_encode(['return_path' => $returnUrl]))])
             ->redirect();
     }
 
@@ -33,23 +34,67 @@ class SocialAuthController extends Controller
 
             $response = $this->authService->socialLogin($socialUser, $provider);
 
-            $cookie = cookie('auth_token', $response->token, 60);
+            // Create short-lived exchange token (5 minutes)
+            $exchangeToken = Str::random(64);
+            Cache::put(
+                "oauth_exchange:{$exchangeToken}",
+                [
+                    'token' => $response->token,
+                    'user'  => $response->user, // Store user object
+                ],
+                now()->addMinutes(5)
+            );
 
-            $state     = $request->query('state');
-            $returnUrl = '/'; // default
+            // Get return path
+            $state      = $request->query('state');
+            $returnPath = '/';
 
             if ($state) {
-                $decoded   = json_decode(base64_decode($state), true);
-                $returnUrl = $decoded['return_url'] ?? '/';
+                $decoded    = json_decode(base64_decode($state), true);
+                $returnPath = $decoded['return_path'] ?? '/';
             }
 
             $frontendUrl = config('app.frontend_url');
-            return redirect()->away($frontendUrl . $returnUrl)->cookie($cookie);
+            $redirectUrl = rtrim($frontendUrl, '/') . '/' . ltrim($returnPath, '/');
+
+            // Pass exchange token (not actual auth token)
+            return redirect()->away("{$redirectUrl}?exchange_token={$exchangeToken}");
+
         } catch (\Exception $e) {
             Log::error($e);
-            throw $e;
-            // $frontendUrl = config('app.frontend_url');
-            // return redirect()->away("{$frontendUrl}/auth/error?message=" . urlencode($e->getMessage()));
+            $frontendUrl = config('app.frontend_url');
+            return redirect()->away("{$frontendUrl}?error=" . urlencode($e->getMessage()));
         }
+    }
+
+    public function exchange(Request $request)
+    {
+        $exchangeToken = $request->input('exchange_token');
+
+        if (! $exchangeToken) {
+            return response()->json(['message' => 'Exchange token required'], 400);
+        }
+
+        // Get token and user data from cache
+        $data = Cache::pull("oauth_exchange:{$exchangeToken}");
+
+        if (! $data) {
+            return response()->json(['message' => 'Invalid or expired exchange token'], 401);
+        }
+
+        $cookie = cookie(
+            'auth_token',
+            $data['token'],
+            60,    // 60 minutes
+            '/',   // path
+            null,  // domain
+            true,  // secure (HTTPS only)
+            true   // httpOnly (JavaScript can't read)
+        );
+
+        return response()->json([
+            'message' => 'Authentication successful',
+            'user'    => UserResource::make($data['user']) // Return user with resource
+        ])->cookie($cookie);
     }
 }

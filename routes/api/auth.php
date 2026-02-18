@@ -13,6 +13,8 @@ Route::prefix('auth')->group(function () {
     Route::get('/provider/{provider}', [SocialAuthController::class, 'redirect']);
     Route::get('/provider/{provider}/callback', [SocialAuthController::class, 'callback']);
 
+    Route::post('/exchange', [SocialAuthController::class, 'exchange']);
+
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/social-login', [AuthController::class, 'socialLogin']);
