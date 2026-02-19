@@ -17,11 +17,24 @@ class SocialAuthController extends Controller
 
     public function redirect(Request $request, string $provider)
     {
-        $returnUrl = $request->query('return_path', '/');
+        $returnPath = $request->query('return_path', '/');
+        $origin     = $request->query('origin');
+
+        // Validate origin
+        $allowedOrigins = config('cors.allowed_origins');
+
+        if (! $origin || ! in_array($origin, $allowedOrigins)) {
+            abort(403, 'Invalid origin');
+        }
 
         return Socialite::driver($provider)
             ->stateless()
-            ->with(['state' => base64_encode(json_encode(['return_path' => $returnUrl]))])
+            ->with([
+                'state' => base64_encode(json_encode([
+                    'return_path' => $returnPath,
+                    'origin'      => $origin,
+                ])),
+            ])
             ->redirect();
     }
 
@@ -40,40 +53,50 @@ class SocialAuthController extends Controller
                 "oauth_exchange:{$exchangeToken}",
                 [
                     'token' => $response->token,
-                    'user'  => $response->user, // Store user object
+                    'user'  => $response->user,
                 ],
                 now()->addMinutes(5)
             );
 
-            $requestOrigin = $request->headers->get('origin') ?? $request->headers->get('referer');
-
-            // Validate against whitelist
-            $allowedOrigins = config('cors.allowed_origins');
-            $frontendUrl    = config('app.frontend_url'); // default
-
-            if ($requestOrigin) {
-                $parsedOrigin = parse_url($requestOrigin, PHP_URL_SCHEME) . '://' . parse_url($requestOrigin, PHP_URL_HOST);
-                if (in_array($parsedOrigin, $allowedOrigins)) {
-                    $frontendUrl = $parsedOrigin;
-                }
-            }
-
-            $state      = $request->query('state');
-            $returnPath = '/';
+            // Get origin and return path from state
+            $state       = $request->query('state');
+            $frontendUrl = config('app.frontend_url'); // default
+            $returnPath  = '/';
 
             if ($state) {
                 $decoded    = json_decode(base64_decode($state), true);
                 $returnPath = $decoded['return_path'] ?? '/';
+                $origin     = $decoded['origin'] ?? null;
+
+                // Validate origin from state
+                $allowedOrigins = config('cors.allowed_origins');
+                if ($origin && in_array($origin, $allowedOrigins)) {
+                    $frontendUrl = $origin;
+                }
             }
 
             $redirectUrl = rtrim($frontendUrl, '/') . '/' . ltrim($returnPath, '/');
 
-            // Pass exchange token (not actual auth token)
+            // Pass exchange token
             return redirect()->away("{$redirectUrl}?exchange_token={$exchangeToken}");
 
         } catch (\Exception $e) {
             Log::error($e);
+
+            // Even on error, try to redirect to correct origin
+            $state       = $request->query('state');
             $frontendUrl = config('app.frontend_url');
+
+            if ($state) {
+                $decoded        = json_decode(base64_decode($state), true);
+                $origin         = $decoded['origin'] ?? null;
+                $allowedOrigins = config('cors.allowed_origins');
+
+                if ($origin && in_array($origin, $allowedOrigins)) {
+                    $frontendUrl = $origin;
+                }
+            }
+
             return redirect()->away("{$frontendUrl}?error=" . urlencode($e->getMessage()));
         }
     }
