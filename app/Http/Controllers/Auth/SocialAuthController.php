@@ -45,7 +45,19 @@ class SocialAuthController extends Controller
                 now()->addMinutes(5)
             );
 
-            // Get return path
+            $requestOrigin = $request->headers->get('origin') ?? $request->headers->get('referer');
+
+            // Validate against whitelist
+            $allowedOrigins = config('cors.allowed_origins');
+            $frontendUrl    = config('app.frontend_url'); // default
+
+            if ($requestOrigin) {
+                $parsedOrigin = parse_url($requestOrigin, PHP_URL_SCHEME) . '://' . parse_url($requestOrigin, PHP_URL_HOST);
+                if (in_array($parsedOrigin, $allowedOrigins)) {
+                    $frontendUrl = $parsedOrigin;
+                }
+            }
+
             $state      = $request->query('state');
             $returnPath = '/';
 
@@ -54,7 +66,6 @@ class SocialAuthController extends Controller
                 $returnPath = $decoded['return_path'] ?? '/';
             }
 
-            $frontendUrl = config('app.frontend_url');
             $redirectUrl = rtrim($frontendUrl, '/') . '/' . ltrim($returnPath, '/');
 
             // Pass exchange token (not actual auth token)
