@@ -15,11 +15,19 @@ class AuthenticateFromCookie
      */
     public function handle(Request $request, Closure $next): Response
     {
+        logger('TEST LOG FROM MIDDLEWARE');
+
         // Extract token from cookie
         if ($token = $request->cookie('auth_token')) {
             // Set it as Authorization header so Sanctum can find it
             $request->headers->set('Authorization', 'Bearer ' . $token);
         }
+
+        \Log::info('Authorization header:', [
+            'auth' => $request->header('Authorization'),
+        ]);
+
+        \Log::info('Cookies:', $request->cookies->all());
 
         return $next($request);
     }
