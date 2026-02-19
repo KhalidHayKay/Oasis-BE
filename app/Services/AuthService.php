@@ -138,9 +138,10 @@ class AuthService
     {
         $user->tokens()->delete();
 
+        // , expiresAt: now()->addHour()
         return new AuthResponse(
             $user,
-            $user->createToken('auth_token', expiresAt: now()->addHour())->plainTextToken
+            $user->createToken('auth_token')->plainTextToken
         );
     }
 }

@@ -47,7 +47,6 @@ class SocialAuthController extends Controller
 
             $response = $this->authService->socialLogin($socialUser, $provider);
 
-            // Create short-lived exchange token (5 minutes)
             $exchangeToken = Str::random(64);
             Cache::put(
                 "oauth_exchange:{$exchangeToken}",
@@ -59,8 +58,9 @@ class SocialAuthController extends Controller
             );
 
             // Get origin and return path from state
-            $state       = $request->query('state');
-            $frontendUrl = config('app.frontend_url'); // default
+            $state = $request->query('state');
+            // Defaults
+            $frontendUrl = config('app.frontend_url');
             $returnPath  = '/';
 
             if ($state) {
@@ -83,7 +83,6 @@ class SocialAuthController extends Controller
         } catch (\Exception $e) {
             Log::error($e);
 
-            // Even on error, try to redirect to correct origin
             $state       = $request->query('state');
             $frontendUrl = config('app.frontend_url');
 
