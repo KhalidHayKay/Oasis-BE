@@ -7,7 +7,6 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterUserRequest;
 
 class AuthController extends Controller
@@ -65,6 +64,14 @@ class AuthController extends Controller
 
     private function makeCookie(string $token)
     {
-        return cookie('auth_token', $token, 60); // 60 minutes to match token expiration
+        return cookie(
+            'auth_token',
+            $token,
+            60,    // 60 minutes
+            '/',   // path
+            null,  // domain
+            true,  // secure (HTTPS only)
+            true   // httpOnly (JavaScript can't read)
+        );
     }
 }

@@ -141,7 +141,7 @@ class AuthService
         // , expiresAt: now()->addHour()
         return new AuthResponse(
             $user,
-            $user->createToken('auth_token')->plainTextToken
+            $user->createToken('auth_token', expiresAt: now()->addMinutes(60))->plainTextToken
         );
     }
 }

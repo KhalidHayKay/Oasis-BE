@@ -20,7 +20,6 @@ class SocialAuthController extends Controller
         $returnPath = $request->query('return_path', '/');
         $origin     = $request->query('origin');
 
-        // Validate origin
         $allowedOrigins = config('cors.allowed_origins');
 
         if (! $origin || ! in_array($origin, $allowedOrigins)) {
@@ -57,25 +56,9 @@ class SocialAuthController extends Controller
                 now()->addMinutes(5)
             );
 
-            // Get origin and return path from state
             $state = $request->query('state');
-            // Defaults
-            $frontendUrl = config('app.frontend_url');
-            $returnPath  = '/';
 
-            if ($state) {
-                $decoded    = json_decode(base64_decode($state), true);
-                $returnPath = $decoded['return_path'] ?? '/';
-                $origin     = $decoded['origin'] ?? null;
-
-                // Validate origin from state
-                $allowedOrigins = config('cors.allowed_origins');
-                if ($origin && in_array($origin, $allowedOrigins)) {
-                    $frontendUrl = $origin;
-                }
-            }
-
-            $redirectUrl = rtrim($frontendUrl, '/') . '/' . ltrim($returnPath, '/');
+            $redirectUrl = $this->constructRedirectUrl($state);
 
             // Pass exchange token
             return redirect()->away("{$redirectUrl}?exchange_token={$exchangeToken}");
@@ -83,20 +66,11 @@ class SocialAuthController extends Controller
         } catch (\Exception $e) {
             Log::error($e);
 
-            $state       = $request->query('state');
-            $frontendUrl = config('app.frontend_url');
+            $state = $request->query('state');
 
-            if ($state) {
-                $decoded        = json_decode(base64_decode($state), true);
-                $origin         = $decoded['origin'] ?? null;
-                $allowedOrigins = config('cors.allowed_origins');
+            $redirectUrl = $this->constructRedirectUrl($state);
 
-                if ($origin && in_array($origin, $allowedOrigins)) {
-                    $frontendUrl = $origin;
-                }
-            }
-
-            return redirect()->away("{$frontendUrl}?error=" . urlencode($e->getMessage()));
+            return redirect()->away("{$redirectUrl}?error=" . urlencode($e->getMessage()));
         }
     }
 
@@ -108,7 +82,6 @@ class SocialAuthController extends Controller
             return response()->json(['message' => 'Exchange token required'], 400);
         }
 
-        // Get token and user data from cache
         $data = Cache::pull("oauth_exchange:{$exchangeToken}");
 
         if (! $data) {
@@ -127,7 +100,28 @@ class SocialAuthController extends Controller
 
         return response()->json([
             'message' => 'Authentication successful',
-            'user'    => UserResource::make($data['user']) // Return user with resource
+            'user'    => UserResource::make($data['user']),
         ])->cookie($cookie);
+    }
+
+    protected function constructRedirectUrl(string $state)
+    {
+        // Defaults
+        $frontendUrl = config('app.frontend_url');
+        $returnPath  = '/';
+
+        if ($state) {
+            $decoded    = json_decode(base64_decode($state), true);
+            $returnPath = $decoded['return_path'] ?? '/';
+            $origin     = $decoded['origin'] ?? null;
+
+            // Validate origin from state
+            $allowedOrigins = config('cors.allowed_origins');
+            if ($origin && in_array($origin, $allowedOrigins)) {
+                $frontendUrl = $origin;
+            }
+        }
+
+        return rtrim($frontendUrl, '/') . '/' . ltrim($returnPath, '/');
     }
 }
