@@ -18,8 +18,6 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
-    // public function __construct(readonly protected FirebaseAuthService $firebase) {}
-
     public function login(array $credentials)
     {
         $user = User::where('email', $credentials['email'])->first();
@@ -86,11 +84,12 @@ class AuthService
 
     public function register(array $data)
     {
-        $data['password'] = bcrypt($data['password']);
+        $data['password']          = bcrypt($data['password']);
+        $data['email_verified_at'] = now();
 
         $user = User::create($data);
 
-        $this->sendEmailVerificationCode($user);
+        // $this->sendEmailVerificationCode($user);
 
         return $this->respondWithToken($user);
     }

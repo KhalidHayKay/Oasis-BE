@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Gate::define('viewApiDocs', function (?User $user = null) {
-            $token    = request()->query('token');
+            $token    = request()->query('access');
             $envToken = env('APP_DOCS_ACCESS_TOKEN');
 
             if (! $envToken) {

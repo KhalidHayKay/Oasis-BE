@@ -6,7 +6,7 @@ use RuntimeException;
 
 class EmailNotVerifiedException extends RuntimeException
 {
-    public function __construct(protected string $message = 'Email not verified')
+    public function __construct(protected $message = 'Email not verified')
     {
         parent::__construct($message);
     }

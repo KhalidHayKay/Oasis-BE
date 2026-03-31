@@ -44,7 +44,7 @@ class AuthController extends Controller
         $cookie = $this->makeCookie($res->token);
 
         return response()->json([
-            'message' => 'Registration successful, A verification code will be sent to your email',
+            'message' => 'Registration successful.', //, A verification code will be sent to your email
             'user'    => UserResource::make($res->user),
         ], 201)->cookie($cookie);
     }
