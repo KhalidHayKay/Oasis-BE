@@ -27,6 +27,17 @@ class AuthController extends Controller
 
         $res = $this->service->login($data);
 
+        if ($this->isMobileClient($request)) {
+            return response()->json([
+                'message' => 'Login successful',
+                'user'    => UserResource::make($res->user),
+                'token'   => [
+                    'value'  => $res->token,
+                    'expiry' => $res->expiresAt,
+                ],
+            ]);
+        }
+
         $cookie = $this->makeCookie($res->token);
 
         return response()->json([
@@ -41,10 +52,21 @@ class AuthController extends Controller
 
         $res = $this->service->register($data);
 
+        if ($this->isMobileClient($request)) {
+            return response()->json([
+                'message' => 'Registration successful.',
+                'user'    => UserResource::make($res->user),
+                'token'   => [
+                    'value'  => $res->token,
+                    'expiry' => $res->expiresAt,
+                ],
+            ], 201);
+        }
+
         $cookie = $this->makeCookie($res->token);
 
         return response()->json([
-            'message' => 'Registration successful.', //, A verification code will be sent to your email
+            'message' => 'Registration successful.',
             'user'    => UserResource::make($res->user),
         ], 201)->cookie($cookie);
     }
@@ -55,11 +77,22 @@ class AuthController extends Controller
 
         $this->service->logout($user);
 
+        if ($this->isMobileClient($request)) {
+            return response()->json([
+                'message' => 'Logged out successfully',
+            ]);
+        }
+
         $cookie = cookie()->forget('auth_token');
 
         return response()->json([
             'message' => 'Logged out successfully',
         ])->cookie($cookie);
+    }
+
+    private function isMobileClient(Request $request): bool
+    {
+        return $request->header('X-Client-Type') === 'mobile';
     }
 
     private function makeCookie(string $token)

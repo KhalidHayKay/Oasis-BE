@@ -50,8 +50,9 @@ class SocialAuthController extends Controller
             Cache::put(
                 "oauth_exchange:{$exchangeToken}",
                 [
-                    'token' => $response->token,
-                    'user'  => $response->user,
+                    'token'      => $response->token,
+                    'user'       => $response->user,
+                    'expires_at' => $response->expiresAt,
                 ],
                 now()->addMinutes(5)
             );
@@ -88,10 +89,21 @@ class SocialAuthController extends Controller
             return response()->json(['message' => 'Invalid or expired exchange token'], 401);
         }
 
+        if ($request->header('X-Client-Type') === 'mobile') {
+            return response()->json([
+                'message' => 'Authentication successful',
+                'user'    => UserResource::make($data['user']),
+                'token'   => [
+                    'value'  => $data['token'],
+                    'expiry' => $data['expires_at'],
+                ],
+            ]);
+        }
+
         $cookie = cookie(
             'auth_token',
             $data['token'],
-            60,    // 60 minutes
+            $data['expires_at'],
             '/',   // path
             null,  // domain
             true,  // secure (HTTPS only)
