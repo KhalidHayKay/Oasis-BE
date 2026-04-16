@@ -71,6 +71,31 @@ class AuthController extends Controller
         ], 201)->cookie($cookie);
     }
 
+    public function refresh(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $res = $this->service->refresh($user);
+
+        if ($this->isMobileClient($request)) {
+            return response()->json([
+                'message' => 'Auth refresh successful',
+                'user'    => UserResource::make($res->user),
+                'token'   => [
+                    'value'  => $res->token,
+                    'expiry' => $res->expiresAt,
+                ],
+            ]);
+        }
+
+        $cookie = $this->makeCookie($res->token);
+
+        return response()->json([
+            'message' => 'Auth refresh successful',
+            'user'    => UserResource::make($res->user),
+        ])->cookie($cookie);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();

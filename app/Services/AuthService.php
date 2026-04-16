@@ -36,6 +36,11 @@ class AuthService
         return $this->respondWithToken($user);
     }
 
+    public function refresh(User $user)
+    {
+        return $this->respondWithToken($user);
+    }
+
     public function socialLogin(SocialUser $socialUser, string $provider)
     {
         $account = SocialAccount::where('provider_name', $provider)
