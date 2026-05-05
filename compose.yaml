@@ -7,14 +7,14 @@ services:
         APP_USER: "${USER:-oasis}"
         USER_ID: "${WWWUSER:-1000}"
         GROUP_ID: "${WWWGROUP:-1000}"
-    env_file:
-      - .env
     image: oasis-backend
     container_name: oasis-backend
     restart: unless-stopped
     working_dir: /var/www
     depends_on:
       - db
+    volumes:
+      - .env:/var/www/.env:ro
     networks:
       - oasis
 
