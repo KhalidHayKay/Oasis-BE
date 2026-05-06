@@ -17,22 +17,16 @@ class ForceJsonResponse
     {
         $accept = strtolower($request->header('Accept'));
 
-        $allowedRoutes = [
-            'docs*',
-            'preview*',
-            'health',
+        $allowedAPIRoutes = [
             'api/auth/provider/*',
-            'auth/error',
-            'api/webhooks/*',
         ];
 
         // If Accept header is present, not JSON, and route doesn't match any allowed pattern
         if (
             $accept &&
             stripos($accept, 'application/json') === false &&
-            ! collect($allowedRoutes)->contains(function ($pattern) use ($request) {
-                return $request->is($pattern);
-            })
+            $request->is('api/*') &&
+            ! collect($allowedAPIRoutes)->contains(fn ($pattern) => $request->is($pattern))
         ) {
             return response()->json([
                 'error' => 'Only Accept: application/json is supported.',

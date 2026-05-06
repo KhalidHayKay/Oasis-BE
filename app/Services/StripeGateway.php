@@ -14,7 +14,7 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.api_secret'));
+        $this->stripe = new StripeClient(config('services.stripe.api_key'));
     }
 
     public function getName(): string

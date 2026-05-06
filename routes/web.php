@@ -1,9 +1,22 @@
 <?php
 
+use App\Http\Controllers\Webhooks\StripeWebhookController;
 use Dedoc\Scramble\Scramble;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__ . '/health.php';
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo();
+        return response()->json(['status' => 'ok', 'database' => 'connected'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'database' => 'not connected'], 500);
+    }
+});
+
+Route::prefix('webhooks')->group(function () {
+    Route::post('/stripe', [StripeWebhookController::class, 'handle']);
+});
 
 Route::prefix('docs')->group(function () {
     Scramble::registerUiRoute('api');
@@ -11,7 +24,7 @@ Route::prefix('docs')->group(function () {
 });
 
 if (app()->environment('local')) {
-    Route::get('/preview/mail/{view}', function ($view) {
+    Route::get('/mail/view/{view}', function ($view) {
         return view("mail.$view", [
             'name' => 'Test User',
             'code' => '123456',

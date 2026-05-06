@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'api_secret'     => env('STRIPE_API_SECRET', ''),
+    'api_key'        => env('STRIPE_API_KEY', ''),
     'webhook_secret' => env('STRIPE_WEBHOOK_SECRET', ''),
 ];
