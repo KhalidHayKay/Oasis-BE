@@ -56,6 +56,8 @@ return [
 
     'frontend_url'    => env('FRONTEND_URL', 'http://localhost:3000'),
 
+    'doc_access'      => env('APP_DOC_ACCESS'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

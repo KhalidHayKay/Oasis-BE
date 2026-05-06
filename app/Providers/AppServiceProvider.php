@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('viewApiDocs', function (?User $user = null) {
             $token    = request()->query('access');
-            $envToken = env('APP_DOCS_ACCESS_TOKEN');
+            $envToken = config('app.doc_access');
 
             if (! $envToken) {
                 abort(403, 'App docs access token is not configured');
