@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use Dedoc\Scramble\Scramble;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +15,7 @@ Route::get('/health', function () {
     }
 });
 
-Route::prefix('webhooks')->group(function () {
+Route::withoutMiddleware([VerifyCsrfToken::class])->prefix('webhooks')->group(function () {
     Route::post('/stripe', [StripeWebhookController::class, 'handle']);
 });
 
