@@ -15,6 +15,9 @@ services:
       - db
     volumes:
       - .env:/var/www/.env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - oasis
 
@@ -44,6 +47,22 @@ services:
       POSTGRES_DB: ${DB_DATABASE}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - oasis
+
+  worker:
+    image: oasis-backend
+    container_name: oasis-worker
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan queue:work --tries=3 --backoff=5
+    depends_on:
+      - db
+    volumes:
+      - .env:/var/www/.env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - oasis
 

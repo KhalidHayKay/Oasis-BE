@@ -90,11 +90,10 @@ class AuthService
     public function register(array $data)
     {
         $data['password']          = bcrypt($data['password']);
-        $data['email_verified_at'] = now();
 
         $user = User::create($data);
 
-        // $this->sendEmailVerificationCode($user);
+        $this->sendEmailVerificationCode($user);
 
         return $this->respondWithToken($user);
     }

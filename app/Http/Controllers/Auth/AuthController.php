@@ -52,9 +52,11 @@ class AuthController extends Controller
 
         $res = $this->service->register($data);
 
+        $message = 'Registration successful. A verification code has been sent to your email.';
+
         if ($this->isMobileClient($request)) {
             return response()->json([
-                'message' => 'Registration successful.',
+                'message' => $message,
                 'user'    => UserResource::make($res->user),
                 'token'   => [
                     'value'  => $res->token,
@@ -66,7 +68,7 @@ class AuthController extends Controller
         $cookie = $this->makeCookie($res->token);
 
         return response()->json([
-            'message' => 'Registration successful.',
+            'message' => $message,
             'user'    => UserResource::make($res->user),
         ], 201)->cookie($cookie);
     }
