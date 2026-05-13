@@ -22,16 +22,16 @@ class AuthService
     {
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw new InvalidLoginCredentialException();
         }
 
-        if (! $user->email_verified_at) {
-            $this->sendEmailVerificationCode($user);
-            throw new EmailNotVerifiedException(
-                'Email not verified. A new verification code has been sent to your email.'
-            );
-        }
+        // if (! $user->email_verified_at) {
+        //     $this->sendEmailVerificationCode($user);
+        //     throw new EmailNotVerifiedException(
+        //         'Email not verified. A new verification code has been sent to your email.'
+        //     );
+        // }
 
         return $this->respondWithToken($user);
     }
@@ -74,11 +74,11 @@ class AuthService
         }
 
         // Verifying email if email was not verified prior to usage of social login
-        if (! $user->email_verified_at) {
+        if (!$user->email_verified_at) {
             $user->email_verified_at = now();
         }
 
-        if (! $user->avatar && $avatar = $socialUser->getAvatar()) {
+        if (!$user->avatar && $avatar = $socialUser->getAvatar()) {
             $user->avatar = $avatar;
         }
 
@@ -89,7 +89,7 @@ class AuthService
 
     public function register(array $data)
     {
-        $data['password']          = bcrypt($data['password']);
+        $data['password'] = bcrypt($data['password']);
 
         $user = User::create($data);
 

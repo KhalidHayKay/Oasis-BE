@@ -36,7 +36,7 @@ class PasswordController extends Controller
             Mail::to($user->email)->send(new PasswordReset($user->name, $code));
         }
 
-        return response()->json(['message' => 'Password reset code sent successfully'], 201);
+        return response()->json(['message' => 'A password reset OTP has been sent to your email'], 201);
     }
 
     public function reset(Request $request)
@@ -55,13 +55,15 @@ class PasswordController extends Controller
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();
-
-                // Auth / Login logic
             }
         );
 
+        if ($status === Password::RESET_THROTTLED) {
+            return response()->json(['message' => 'Too many attempts. Please try again later.'], 429);
+        }
+
         return $status === Password::PASSWORD_RESET
             ? response()->json(['message' => 'Password reset successfully'], 200)
-            : response()->json(['message' => __($status)], 422);
+            : response()->json(['message' => 'Invalid or expired reset link. Please request a new one.'], 422);
     }
 }
