@@ -1,210 +1,207 @@
-# Oasis Backend
+# Oasis — E-commerce Backend
 
-A Laravel API backend running on PHP-FPM + Nginx + PostgreSQL, fully containerized with Docker.
+A feature-rich Laravel backend powering an online storefront with product catalogs, shopping cart flows, checkout, payments, content feeds, and marketing capture.
 
----
-
-## Stack
-
-| Service | Image                 | Description                |
-| ------- | --------------------- | -------------------------- |
-| `app`   | `php:8.4-fpm-alpine`  | PHP-FPM application server |
-| `nginx` | `nginx:stable-alpine` | Web server / reverse proxy |
-| `db`    | `postgres:16-alpine`  | PostgreSQL database        |
+This project demonstrates modern backend engineering patterns including API-first architecture, service-layer separation, token authentication, and containerized deployment.
 
 ---
 
-## Prerequisites
+## 🌍 Try it Live
 
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- No local PHP or Composer required
+[Live Preview](https://oasis.haykay.xyz) · [Frontend Repository](https://github.com/KhalidHayKay/Oasis)
 
 ---
 
-## Project Structure (Docker-relevant files)
+## What It Does
+
+- Provides user authentication with Sanctum token-based auth
+- Supports social login via Laravel Socialite and email verification flows
+- Exposes product catalog, categories, blogs, tags, and inspiration feeds
+- Manages user carts and cart item synchronization
+- Handles checkout validation, shipping address capture, and payment intent creation
+- Tracks orders and order history for authenticated users
+- Provides a waitlist endpoint for marketing capture
+
+---
+
+## Architecture
+
+The application is organized with clear separation of concerns:
+
+- **Authentication Layer** — Sanctum and Socialite for API auth and social login
+- **Controller Layer** — HTTP request handling, route definitions, and JSON responses
+- **Service Layer** — Business logic and domain operations in `app/Services`
+- **Resource Layer** — API response formatting via Laravel resources
+- **Storage Layer** — local file storage and environment-driven upload configuration
+
+---
+
+## 🚀 Features
+
+- 🔐 Sanctum token-based authentication
+- 🌐 Social login providers and email verification
+- 🛍️ Product catalog with categories, tags, and inspiration content
+- 🛒 Shopping cart management with sync, increment, decrement, and clear
+- ✉️ Checkout flow
+- 💳 Contract based payment handling
+- 📦 Order history retrieval for verified customers
+- 🐳 Docker Compose deployment-ready
+
+---
+
+## 🏗 Project Structure
 
 ```
-├── Dockerfile
-├── compose.yaml               # Production-safe base config
-├── compose.override.yaml      # Dev-only config (gitignored)
-├── nginx.conf                 # Nginx server block
-├── start.sh                   # Container entrypoint script
-└── .env                       # Environment variables (gitignored)
+Oasis-BE/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/       # API controllers and route handlers
+│   │   ├── Requests/          # Form request validation
+│   │   └── Resources/         # API response transformers
+│   ├── Models/                # Eloquent models and relationships
+│   └── Services/              # Business logic layer
+├── config/                    # App configuration and environment mapping
+├── database/
+│   ├── migrations/            # Database schema definitions
+│   └── seeders/               # Seed data generators
+├── routes/
+│   ├── api/                   # Modular API route definitions
+│   └── web.php                # Web routes
+├── docker/                    # Docker setup (if present)
+├── .env.example               # Environment template
+└── composer.json              # PHP dependencies
 ```
 
 ---
 
-## How it Works
+## ⚙️ How It Works
 
-### Single image, two environments
-
-One `Dockerfile` and one `compose.yaml` serve both dev and production. A gitignored `compose.override.yaml` adds dev-only behaviour (full source mount) and is merged automatically by Docker Compose when present.
-
-### Volume strategy
-
-The setup uses named volumes to solve a fundamental Docker problem: bind-mounting `./:/var/www` in dev would wipe out `vendor/` and other build artifacts installed during the image build. Named volumes shield those paths:
-
-| Volume            | Purpose                                                          |
-| ----------------- | ---------------------------------------------------------------- |
-| `vendor`          | Composer dependencies — owned by Docker, not the host (dev only) |
-| `storage`         | Laravel storage directory — writable, persisted                  |
-| `bootstrap-cache` | Laravel bootstrap cache — writable, persisted                    |
-| `public-vol`      | Built public assets — shared between `app` and `nginx`           |
-| `pgdata`          | Postgres data                                                    |
-| `nginx-logs`      | Nginx access/error logs                                          |
-
-### How `public/` reaches Nginx
-
-Nginx needs access to `public/index.php` but runs in a separate container. `start.sh` copies `/var/www/public/` into a shared named volume (`public-vol`) on every container start. Nginx mounts that same volume as its web root.
+1. Users register or login and receive a Sanctum token
+2. Authenticated users browse products, categories, blogs, tags, and inspirations
+3. Cart endpoints let users add items, sync state, update quantities, and clear the cart
+4. Checkout validates the cart and saves shipping address details
+5. Payment endpoints create and confirm Stripe intents
+6. Orders are created and retrievable for authenticated, verified users
+7. Waitlist signups capture leads for marketing or early access
 
 ---
 
-## Local Development Setup
+## 🧪 Getting Started
 
-### 1. Clone the repo
+### Prerequisites
+
+- Docker and Docker Compose
+- PHP 8.2+ (for local composer commands)
+
+### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/oasis-backend.git
-cd oasis-backend
+git clone https://github.com/KhalidHayKay/Oasis-BE.git
+cd Oasis-BE
 ```
 
-### 2. Set up your environment file
+### 2️⃣ Setup Environment Variables
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in the required values. Key ones for Docker:
+Update `.env` with your database credentials, frontend URL, Stripe API key, and mail driver settings.
 
-```env
-APP_ENV=local
-APP_KEY=        # generated in step 5
-DB_HOST=db      # must match the compose service name
-DB_PORT=5432
-DB_DATABASE=oasis
-DB_USERNAME=root
-DB_PASSWORD=root
-```
-
-### 3. Create the Compose override file
-
-Create `compose.override.yaml` in the project root. This file is gitignored and only applies locally:
-
-```yaml
-services:
-    app:
-        volumes:
-            - ./:/var/www
-            - vendor:/var/www/vendor # shields vendor/ from the host mount
-            - storage:/var/www/storage
-            - bootstrap-cache:/var/www/bootstrap/cache
-
-    nginx:
-        volumes:
-            - ./nginx.conf:/etc/nginx/conf.d/default.conf
-            - ./:/var/www
-            - nginx-logs:/var/log/nginx
-
-volumes:
-    vendor:
-```
-
-> **Why is this not committed?** The override mounts your local source code for live editing. In production only the image-built code runs — `compose.yaml` alone is safe to use as-is on the server.
-
-### 4. Build and start
+### 3️⃣ Start Services
 
 ```bash
-docker compose up --build
+docker-compose up -d
 ```
 
-Docker Compose automatically merges `compose.override.yaml` when it exists. The app will be available at `http://localhost:8010`.
-
-### 5. Generate app key
+### 4️⃣ Initialize the Application
 
 ```bash
-docker compose exec app php artisan key:generate
+docker-compose exec app composer install
+docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan migrate
+docker-compose exec app php artisan db:seed
 ```
 
-Then restart so the cached config picks it up:
+The API will be available at: `http://localhost:8010`
 
-```bash
-docker compose restart app
+---
+
+## 🔑 API Endpoints
+
+### Authentication
+
+```
+GET    /api/auth/me
+POST   /api/auth/login
+POST   /api/auth/register
+POST   /api/auth/refresh
+POST   /api/auth/logout
+POST   /api/auth/email/verify
+POST   /api/auth/email/send-code
+POST   /api/auth/password/forgot
+POST   /api/auth/password/reset
 ```
 
-### 6. Run migrations
+### Product & Content
 
-```bash
-docker compose exec app php artisan migrate
+```
+GET /api/categories
+GET /api/categories/{slug}
+GET /api/products
+GET /api/products/top
+GET /api/products/{product}
+GET /api/inspirations
+GET /api/tags
+GET /api/blogs
+GET /api/blogs/{slug}
+```
+
+### Cart
+
+```
+GET    /api/cart
+POST   /api/cart/items
+POST   /api/cart/sync
+PATCH  /api/cart/items/{item}/quantity/increment
+PATCH  /api/cart/items/{item}/quantity/decrement
+DELETE /api/cart/items/{item}
+DELETE /api/cart
+```
+
+### Checkout & Payment
+
+```
+GET    /api/checkout
+POST   /api/checkout
+POST   /api/checkout/address
+GET    /api/payment/show
+POST   /api/payment/intent
+POST   /api/payment/confirm
+```
+
+### Orders
+
+```
+GET /api/orders
+GET /api/orders/{order}
 ```
 
 ---
 
-## Common Commands
+## 🔐 Security
 
-```bash
-# Start (override merged automatically in dev)
-docker compose up --build
-
-# Start in background
-docker compose up -d --build
-
-# Shell into the app container
-docker compose exec app sh
-
-# Run artisan commands
-docker compose exec app php artisan <command>
-
-# Run composer
-docker compose exec app composer <command>
-
-# View logs
-docker compose logs app
-docker compose logs nginx
-
-# Stop everything
-docker compose down
-
-# Stop and wipe all volumes (full reset)
-docker compose down -v
-```
+- Sanctum token authentication on protected endpoints
+- Verified email enforcement for cart, checkout, payment, and orders
+- Input validation using Laravel Form Requests
+- Bcrypt password hashing handled by Laravel
+- Eloquent ORM protects against SQL injection
+- CORS control via environment-configured origin allowlist
 
 ---
 
-## Production Deployment
+## 👨‍💻 Author
 
-On the production server, only `compose.yaml` exists — no override file. The full source is baked into the image at build time.
+Built by Khalid
 
-```bash
-# Pull latest code
-git pull
-
-# Rebuild and restart
-docker compose up --build -d
-
-# Run migrations after deploy
-docker compose exec app php artisan migrate --force
-```
-
-The Dockerfile runs `composer install --no-dev --optimize-autoloader` at build time. `start.sh` handles config, route, and view caching on every container start — no manual cache-warming needed after deploys.
-
----
-
-## What `start.sh` Does
-
-On every container start, before php-fpm launches:
-
-1. Sets correct ownership and permissions on `storage/` and `bootstrap/cache/`
-2. Copies `public/` assets into the shared `public-vol` volume so Nginx can serve them
-3. Runs `php artisan config:cache`, `route:cache`, and `view:cache`
-4. Starts `php-fpm`
-
-Migrations are intentionally **not** run automatically — trigger them manually via `exec` so you control exactly when schema changes are applied.
-
----
-
-## Security Notes
-
-- Never commit `.env`
-- Never commit `compose.override.yaml`
-- The nginx config denies access to `.env`, `composer.json`, `.git`, and other sensitive files
-- `--no-dev` is passed to Composer in the Dockerfile so dev dependencies never reach production
+**Tech Stack:** Laravel 12 · Sanctum · Socialite · Stripe · PostgreSQL · Docker · Nginx
